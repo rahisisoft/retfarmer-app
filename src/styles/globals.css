@@ -1,0 +1,76 @@
+/* Customize the progress bar */
+#nprogress .bar {
+    background: #007bff; /* Bootstrap primary color */
+    height: 4px;
+    width: 10px;
+  }
+  
+  #nprogress .spinner-icon {
+    border-top-color: #007bff;
+    border-left-color: #007bff;
+  }
+
+  .sidebar {
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 1rem;
+  }
+  
+  .main-content {
+    margin-left: 200px;
+  }
+
+  /* styles/globals.css */
+
+main_user_content {
+  padding-top: 70px; /* Padding pour le menu fixe */
+  padding-bottom: 50px; /* Padding pour le footer fixe */
+}
+
+.card-menu {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+  text-align: center;
+  padding: 20px;
+}
+
+.card-menu:hover {
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card-icon {
+  font-size: 40px;
+  color: #007bff;
+}
+
+.fixed-footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: #f8f9fa;
+  padding: 10px 0;
+  text-align: center;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+.autocomplete
+{
+  position: "absolute";
+  top: "100%";
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: "white";
+  border: "1px solid #ccc";
+  max-height: "200px";
+  overflow-y: "auto";
+}
