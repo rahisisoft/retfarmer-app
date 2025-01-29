@@ -25,9 +25,9 @@ const Layout = ({ children }) => {
           logoutUser();
         };
         
-    if (!user) {
-            return <p>Loading...</p>; // Show a loader while fetching user data
-    }
+    //if (!user) {
+            //return <p>Loading...</p>; // Show a loader while fetching user data
+    //}
 
   return (
   <div className="container-fluid">
