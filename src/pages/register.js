@@ -1,6 +1,5 @@
 import axiosInstance from "../utils/axiosInstance";
 import { useState } from "react";
-import { toast } from "react-toastify";
 import { useRouter } from "next/router";
 
 const Register = () => {

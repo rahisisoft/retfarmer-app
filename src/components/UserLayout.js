@@ -9,23 +9,6 @@ const UserLayout = ({ children }) => {
   const router = useRouter();
   const resetAllContexts = useResetAllContexts();
    
-    useEffect(() => {
-
-        const fetchUser = async () => {
-          try {
-            const response = await axiosInstance.get("/validate_user.php");
-            if (response.data.status === "success") {
-              setUser(response.data.user);
-            } else {
-              router.push("/"); // Redirect to login if not authenticated
-            }
-          } catch (error) {
-            router.push("/"); // Redirect to login on error
-          }
-        };
-    
-        fetchUser();
-      }, [router]);
     
         const logoutUser = async () => {
           try {
