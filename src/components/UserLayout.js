@@ -8,6 +8,24 @@ const UserLayout = ({ children }) => {
   const [user, setUser] = useState(null);
   const router = useRouter();
   const resetAllContexts = useResetAllContexts();
+
+  // Check if the user is already logged in (via session or token)
+useEffect(() => {
+  const checkSession = async () => {
+  try {
+  const response = await axiosInstance.get("/validate.php");
+  if (response.data.status === "error") {
+    router.push("/login");
+  } else {
+  setUser(response.data.user);
+  }
+  } catch (error) {
+  //setLoading(false);
+  }
+  };
+  
+  checkSession();
+  }, [router]);
    
     
         const logoutUser = async () => {
@@ -26,9 +44,9 @@ const UserLayout = ({ children }) => {
           logoutUser();
         };
         
-    //if (!user) {
-            //return <p>Loading...</p>; // Show a loader while fetching user data
-    //}
+    if (!user) {
+            return <p>Loading...</p>; // Show a loader while fetching user data
+    }
 
     
   return (

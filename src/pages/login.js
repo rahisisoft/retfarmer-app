@@ -8,6 +8,26 @@ const [form, setForm] = useState({ name: "", password: "", remember: false });
 const [loading, setLoading] = useState(true);
 const router = useRouter();
 
+// Check if the user is already logged in (via session or token)
+useEffect(() => {
+  const checkSession = async () => {
+  try {
+  const response = await axiosInstance.get("/validate.php");
+  if (response.data.status === "success") {
+    if(response.data.user.role=='admin') router.push("/dashboard");
+    else
+    router.push("/userboard");
+  
+  } else {
+  setLoading(false); // Show login page if not logged in
+  }
+  } catch (error) {
+  setLoading(false);
+  }
+  };
+  
+  checkSession();
+  }, [router]);
 
 const handleInputChange = (e) => {
 const { name, value, type, checked } = e.target;
@@ -31,6 +51,12 @@ alert(response.data.message); // Replace with a toast or better error handling
 alert(error.response?.data?.error || "Login failed. Please try again.");
 }
 };
+
+if (loading) {
+  return <p>Loading...</p>; // Show a loader while checking session
+  //NProgress.start();
+  //return NProgress.done();
+  }
 
 return (
 <div className="container d-flex justify-content-center align-items-center vh-100">
