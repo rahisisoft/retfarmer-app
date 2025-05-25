@@ -16,7 +16,7 @@ const Register = () => {
       const response = await axiosInstance.post("/register.php", form);
       if (response.data.status === "success") {
         alert("Registration successful!");
-        router.push("/login");
+        //router.push("/login");
       } else {
         alert(response.data.message);
       }

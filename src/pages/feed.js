@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 
 const translations = {
   English: {
-    title: "Soil Analysis",
+    title: "Feed Check",
     language: "Language",
     upload: "Upload an image",
     analyze: "Analyze",
@@ -19,7 +19,7 @@ const translations = {
     clear: "Clear History"
   },
   French: {
-    title: "Analyse du Sol",
+    title: "Détection de la Plante",
     language: "Langue",
     upload: "Télécharger une image",
     analyze: "Analyser",
@@ -32,7 +32,7 @@ const translations = {
     clear: "Effacer l'historique"
   },
   Kirundi: {
-    title: "Isuzuma ry'ubutaka",
+    title: "Isuzuma Igiti",
     language: "Ururimi",
     upload: "Shira ishusho",
     analyze: "Suzuma",
@@ -45,7 +45,7 @@ const translations = {
     clear: "Siba amateka"
   },
   Swahili: {
-    title: "Ugunduzi wa Udongo",
+    title: "Ugunduzi wa Chakula wa Mnyama",
     language: "Lugha",
     upload: "Pakia picha",
     analyze: "Changanua",
@@ -59,7 +59,7 @@ const translations = {
   },
 };
 
-export default function Analysis() {
+export default function Plant() {
   const [textInput, setTextInput] = useState("English");
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -104,7 +104,7 @@ export default function Analysis() {
       setError(null);
       setAnalysisResult(null);
 
-      const response = await axiosInstance.post("/gemini-api-3.php", formData, {
+      const response = await axiosInstance.post("/gemini-api-2.php", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

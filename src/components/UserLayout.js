@@ -50,16 +50,16 @@ useEffect(() => {
 
     
   return (
-    <div className="main_user_content">
+    <div className="main_user_content bg-success">
       {/* Menu fixe */}
-      <nav className="navbar navbar-expand-lg navbar-light  bg-primary fixed-top text-white">
+      <nav className="navbar navbar-expand-lg navbar-light  bg-white fixed-top">
         <div className="container-fluid">
-        <Link className="text-white fw-bold h3" href="/userboard"><i className="fas fa-arrow-left"></i></Link> 
+        <Link className="fw-bold h3" href="/userboard"><i className="fas fa-arrow-left"></i></Link> 
         <img
-        src="/images/logo.png"
+        src="/images/logo.jpeg"
         alt="Logo"
         width="30%"
-        className="img-fluid rounded-circle"
+        className="img-fluid"
         />  
           <div className="dropdown">
             <button
@@ -119,7 +119,7 @@ useEffect(() => {
 
 {/* Footer fixe */}
 <div
-  className="fixed-footer bg-primary text-white mt-4"
+  className="fixed-footer bg-white text-white mt-4"
   style={{
     height: '80px', // Ensure height matches the padding-bottom
     display: 'flex',
@@ -127,7 +127,7 @@ useEffect(() => {
     alignItems: 'center',
   }}
 >
-  <Link className="text-white fw-bold h3" href="/userboard">
+  <Link className="text-dark fw-bold h3" href="/userboard">
     <i className="fas fa-home"></i>
   </Link>
 </div>

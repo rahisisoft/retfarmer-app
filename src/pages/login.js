@@ -66,9 +66,9 @@ return (
 <div className="card-body">
 <h4 className="card-title text-center">
         <img
-        src="/images/logo.png"
+        src="/images/logo.jpeg"
         alt="Logo"
-        className="img-fluid rounded-circle"
+        className="img-fluid"
       />  
     Login
 </h4>
