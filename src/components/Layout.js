@@ -11,20 +11,14 @@ const Layout = ({ children }) => {
   
   // Check if the user is already logged in (via session or token)
 useEffect(() => {
-  const checkSession = async () => {
-  try {
-  const response = await axiosInstance.get("/validate.php");
-  if (response.data.status === "error") {
-    router.push("/login");
-  } else {
-  setUser(response.data.user);
-  }
-  } catch (error) {
-  //setLoading(false);
-  }
-  };
-  
-  checkSession();
+    const storedUser = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+
+    if (!token || !storedUser) {
+      router.push("/");
+    } else {
+      setUser(storedUser);
+    }
   }, [router]);
 
         const logoutUser = async () => {
