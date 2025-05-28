@@ -34,6 +34,7 @@ export default function Market() {
 
   return (
     <UserLayout>
+      <div className='mt-2'>
   {successMessage && (
     <div className="alert alert-success" role="alert">
       {successMessage}
@@ -81,7 +82,7 @@ export default function Market() {
             
         ))}
       </div>
-      
+      </div>
     </UserLayout>
   );
 }

@@ -1,49 +1,33 @@
-import { useEffect, useState } from "react";
-import axiosInstance from "../utils/axiosInstance";
-import { useRouter } from "next/router";
 import Link from 'next/link';
-import { useResetAllContexts } from "../contexts/ContextManager";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 const UserLayout = ({ children }) => {
-  const [user, setUser] = useState(null);
   const router = useRouter();
-  const resetAllContexts = useResetAllContexts();
+  const [user, setUser] = useState(null);
 
-  // Check if the user is already logged in (via session or token)
-useEffect(() => {
-  const checkSession = async () => {
-  try {
-  const response = await axiosInstance.get("/validate.php");
-  if (response.data.status === "error") {
-    router.push("/login");
-  } else {
-  setUser(response.data.user);
-  }
-  } catch (error) {
-  //setLoading(false);
-  }
-  };
-  
-  checkSession();
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+
+    if (!token || !storedUser) {
+      router.push("/");
+    } else {
+      setUser(storedUser);
+    }
   }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    //router.push("/");
+    router.replace("/");
+  };
    
     
-        const logoutUser = async () => {
-          try {
-            const response = await axiosInstance.get("/logout.php");
-          setUser(null); // Clear user on logout
-          document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-          localStorage.removeItem('user');
-          router.push("/"); // Redirect to login on error
-          } catch (error) {
-            alert("Error during logout:", error);
-          }
-        };
-        const handleLogout = () => {
-          resetAllContexts();
-          logoutUser();
-        };
-        
+    //if (!user) return <p className="text-center mt-5">Loading dashboard...</p>;    
     if (!user) {
             return <p>Loading...</p>; // Show a loader while fetching user data
     }
@@ -76,33 +60,38 @@ useEffect(() => {
                 width="30"
                 height="30"
               />
-              <span className="ms-2">Hello ! {user?.name || 'Loading...'}</span>
+              <span className="ms-2">Hello ! {user.name || 'Loading...'}</span>
             </button>
             <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="profileMenu">
-               <li>
-                <Link href="/products" className="dropdown-item">
-                  Products
-                </Link>
-              </li>
-              <li>
-                <Link href="/profile" className="dropdown-item">
-                  Profile
-                </Link>
-              </li>
-              <li>
-                <Link href="/settings" className="dropdown-item">
-                  Settings
-                </Link>
-              </li>
-              <li>
-                <hr className="dropdown-divider" />
-              </li>
-              <li>
-                <Link href="#" className="dropdown-item" onClick={handleLogout}>
-                  Logout
-                </Link>
-              </li>
-            </ul>
+  <li>
+    <Link href="/products" className="dropdown-item">
+      Products
+    </Link>
+  </li>
+  <li>
+    <Link href="/profile" className="dropdown-item">
+      Profile
+    </Link>
+  </li>
+  <li>
+    <Link href="/settings" className="dropdown-item">
+      Settings
+    </Link>
+  </li>
+  <li>
+    <hr className="dropdown-divider" />
+  </li>
+  <li>
+    <button
+      type="button"
+      className="dropdown-item text-danger"
+      onClick={handleLogout}
+    >
+      <i className="bi bi-box-arrow-right me-2"></i> Logout
+    </button>
+  </li>
+</ul>
+
           </div>
         </div>
       </nav>
