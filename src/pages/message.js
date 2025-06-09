@@ -55,16 +55,20 @@ export default function Message() {
       const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
       const requestData = {
-        contents: [
-          {
-            parts: [
-              {
-                text: textInput,
-              },
-            ],
-          },
-        ],
-      };
+  contents: [
+    {
+      role: "user",
+      parts: [
+        {
+          text:
+            "Tu es un assistant spécialisé uniquement dans l'agriculture. Ne réponds qu'aux questions liées à l'agriculture. Si une question ne concerne pas l’agriculture, indique poliment que tu ne peux répondre qu’à des sujets agricoles.\n\nQuestion : " +
+            textInput,
+        },
+      ],
+    },
+  ],
+};
+
 
       const response = await axios.post(endpoint, requestData, {
         headers: {
