@@ -1,7 +1,7 @@
 import axiosInstance from "../utils/axiosInstance";
 import { useState, useEffect } from 'react';
 import UserLayout from "../components/UserLayout"
-import ProductForm from "@/components/ProductForm";
+import ProductForm from "@/components/ProductFormx";
 import ProductList from "@/components/ProductList";
 
 export default function ProductsPage() {

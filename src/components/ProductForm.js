@@ -1,79 +1,85 @@
-import axiosInstance from "../utils/axiosInstance";
+// components/ProductForm.jsx
 import { useState, useEffect } from 'react';
+import axiosInstance from '../utils/axiosInstance';
+import { useRouter } from 'next/router';
 
+export default function ProductForm({ product = null }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    category: '',
+    price: '',
+    stock: '',
+    unity: '',
+    image: null
+  });
+  const [categories, setCategories] = useState([]);
+  const router = useRouter();
 
-export default function ProductForm({ fetchProducts }) {
-    const [categories, setCategories] = useState([]);
-    const [formData, setFormData] = useState({
-        name: "", description: "", price: "", stock: "", unity: "", image: null, category_id: ""
-    });
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
-    const [preview, setPreview] = useState(null);
+  useEffect(() => {
+    if (product) setFormData(product);
+    axiosInstance.get('/categories.php')
+      .then(res => setCategories(res.data))
+      .catch(err => console.error(err));
+  }, [product]);
 
-    useEffect(() => {
-        fetchCategories();
-    }, []);
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === 'image') {
+      setFormData({ ...formData, image: files[0] });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
 
-    const fetchCategories = async () => {
-        try {
-            const response = await axiosInstance.get("/all-categories.php");
-            setCategories(response.data);
-        } catch (err) {
-            setError("Failed to fetch categories.");
-        }
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const form = new FormData();
+    for (const key in formData) form.append(key, formData[key]);
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        setFormData({ ...formData, image: file });
-        setPreview(URL.createObjectURL(file));
-    };
+    const endpoint = product ? `/edit-product.php?id=${product.id}` : '/add-product.php';
+    try {
+      await axiosInstance.post(endpoint, form);
+      router.push('/market');
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(null);
-        setSuccess(null);
-
-        const formDataToSend = new FormData();
-        Object.keys(formData).forEach(key => {
-            formDataToSend.append(key, formData[key]);
-        });
-
-        try {
-            await axiosInstance.post("/add-product.php", formDataToSend, {
-                headers: { "Content-Type": "multipart/form-data" }
-            });
-            fetchProducts();
-            setSuccess("Product saved successfully!");
-            setFormData({ name: "", description: "", price: "", stock: "", unity: "", image: null, category_id: "" });
-            setPreview(null);
-        } catch (err) {
-            setError("Failed to save product.");
-        }
-    };
-
-    return (
-        <form onSubmit={handleSubmit} className="card p-3 mb-3" encType="multipart/form-data">
-            {error && <div className="alert alert-danger">{error}</div>}
-            {success && <div className="alert alert-success">{success}</div>}
-            <input className="form-control mb-2" type="text" placeholder="Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-            <input className="form-control mb-2" type="text" placeholder="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} required />
-            <input className="form-control mb-2" type="number" placeholder="Price" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} required />
-            <input className="form-control mb-2" type="number" placeholder="Stock" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} required />
-            <input className="form-control mb-2" type="text" placeholder="Unity" value={formData.unity} onChange={(e) => setFormData({ ...formData, unity: e.target.value })} required />
-            
-            <select className="form-control mb-2" value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}>
-                <option value="">Select Category</option>
-                {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-            </select>
-            
-            <input className="form-control mb-2" type="file" accept="image/*" onChange={handleFileChange} />
-            {preview && <img src={preview} alt="Preview" className="img-thumbnail mb-2" width={100} />}
-            
-            <button className="btn btn-primary" type="submit">Save</button>
-        </form>
-    );
+  return (
+    <div className="container mt-4">
+      <h4>{product ? 'Edit Product' : 'Add New Product'}</h4>
+      <form onSubmit={handleSubmit} encType="multipart/form-data">
+        <div className="mb-3">
+          <label className="form-label">Product Name</label>
+          <input type="text" className="form-control" name="name" value={formData.name} onChange={handleChange} required />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Category</label>
+          <select name="category" className="form-select" value={formData.category} onChange={handleChange} required>
+            <option value="">Select a category</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.name}>{cat.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Price</label>
+          <input type="number" className="form-control" name="price" value={formData.price} onChange={handleChange} required />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Stock</label>
+          <input type="number" className="form-control" name="stock" value={formData.stock} onChange={handleChange} required />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Unity</label>
+          <input type="text" className="form-control" name="unity" value={formData.unity} onChange={handleChange} required />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Image</label>
+          <input type="file" className="form-control" name="image" accept="image/*" onChange={handleChange} />
+        </div>
+        <button type="submit" className="btn btn-success">{product ? 'Update' : 'Create'} Product</button>
+      </form>
+    </div>
+  );
 }

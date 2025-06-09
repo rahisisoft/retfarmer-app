@@ -61,7 +61,7 @@ export default function Message() {
       parts: [
         {
           text:
-            "Tu es un assistant spécialisé uniquement dans l'agriculture. Ne réponds qu'aux questions liées à l'agriculture. Si une question ne concerne pas l’agriculture, indique poliment que tu ne peux répondre qu’à des sujets agricoles.\n\nQuestion : " +
+            "Tu es un assistant RETFARMER spécialisé uniquement dans l'agriculture. Ne réponds qu'aux questions liées à l'agriculture. Si une question ne concerne pas l’agriculture, indique poliment que tu ne peux répondre qu’à des sujets agricoles.\n\nQuestion : " +
             textInput,
         },
       ],
