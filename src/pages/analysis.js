@@ -16,7 +16,8 @@ const translations = {
     error: "Please provide a language and an image.",
     failed: "Failed to analyze the input. Please try again.",
     history: "Analysis History",
-    clear: "Clear History"
+    clear: "Clear History",
+    rate: "Rate this result"
   },
   French: {
     title: "Analyse du Sol",
@@ -29,7 +30,8 @@ const translations = {
     error: "Veuillez choisir une langue et une image.",
     failed: "Échec de l'analyse. Veuillez réessayer.",
     history: "Historique des analyses",
-    clear: "Effacer l'historique"
+    clear: "Effacer l'historique",
+    rate: "Notez ce résultat"
   },
   Kirundi: {
     title: "Isuzuma ry'ubutaka",
@@ -42,7 +44,8 @@ const translations = {
     error: "Hitamwo ururimi n’ishusho.",
     failed: "Ntivyagenze neza. Gerageza kandi.",
     history: "Amateka y'isesengura",
-    clear: "Siba amateka"
+    clear: "Siba amateka",
+    rate: "Tanga amanota kuri ibi bisubizo"
   },
   Swahili: {
     title: "Ugunduzi wa Udongo",
@@ -55,7 +58,8 @@ const translations = {
     error: "Tafadhali chagua lugha na picha.",
     failed: "Imeshindikana kuchanganua. Jaribu tena.",
     history: "Historia ya Uchambuzi",
-    clear: "Futa Historia"
+    clear: "Futa Historia",
+    rate: "Kadiria matokeo haya"
   },
 };
 
@@ -67,20 +71,19 @@ export default function Analysis() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [currentRating, setCurrentRating] = useState(0);
 
   const t = translations[textInput] || translations.English;
 
-  // Charger l'historique au démarrage
   useEffect(() => {
-    const stored = localStorage.getItem("analysisHistory");
+    const stored = localStorage.getItem("soilAnalysisHistory");
     if (stored) {
       setHistory(JSON.parse(stored));
     }
   }, []);
 
-  // Sauvegarde à chaque changement
   useEffect(() => {
-    localStorage.setItem("analysisHistory", JSON.stringify(history));
+    localStorage.setItem("soilAnalysisHistory", JSON.stringify(history));
   }, [history]);
 
   const handleImageChange = (e) => {
@@ -103,6 +106,7 @@ export default function Analysis() {
       setLoading(true);
       setError(null);
       setAnalysisResult(null);
+      setCurrentRating(0);
 
       const response = await axiosInstance.post("/gemini-api-3.php", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -110,15 +114,6 @@ export default function Analysis() {
 
       const resultText = response.data.text;
       setAnalysisResult(resultText);
-
-      const newEntry = {
-        language: textInput,
-        image: imagePreview,
-        result: resultText,
-        timestamp: new Date().toISOString(),
-      };
-
-      setHistory((prev) => [newEntry, ...prev]);
     } catch (err) {
       console.error("Error analyzing input:", err);
       setError(t.failed);
@@ -127,9 +122,25 @@ export default function Analysis() {
     }
   };
 
+  const saveWithRating = () => {
+    if (!analysisResult || !currentRating) return;
+
+    const newEntry = {
+      language: textInput,
+      image: imagePreview,
+      result: analysisResult,
+      rating: currentRating,
+      timestamp: new Date().toISOString(),
+    };
+
+    setHistory((prev) => [newEntry, ...prev]);
+    setAnalysisResult(null);
+    setCurrentRating(0);
+  };
+
   const handleClearHistory = () => {
     setHistory([]);
-    localStorage.removeItem("analysisHistory");
+    localStorage.removeItem("soilAnalysisHistory");
   };
 
   return (
@@ -213,6 +224,28 @@ export default function Analysis() {
                     {analysisResult}
                   </ReactMarkdown>
                 </div>
+
+                <div className="mt-3">
+                  <label className="form-label fw-semibold">⭐ {t.rate}</label>
+                  <div className="mb-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        onClick={() => setCurrentRating(star)}
+                        style={{
+                          cursor: "pointer",
+                          color: star <= currentRating ? "#ffc107" : "#ccc",
+                          fontSize: "1.5rem",
+                        }}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <button className="btn btn-success" onClick={saveWithRating} disabled={!currentRating}>
+                    💾 Save with Rating
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -236,10 +269,14 @@ export default function Analysis() {
                     style={{ cursor: "pointer" }}
                   >
                     <div className="d-flex justify-content-between align-items-center">
-                      <span>
-                        <strong>{item.language}</strong> –{" "}
-                        {new Date(item.timestamp).toLocaleString()}
-                      </span>
+                      <div>
+                        <strong>{item.language}</strong> – {new Date(item.timestamp).toLocaleString()}<br />
+                        {item.rating && (
+                          <span>
+                            Rating: {"★".repeat(item.rating)}{"☆".repeat(5 - item.rating)}
+                          </span>
+                        )}
+                      </div>
                       {item.image && (
                         <img
                           src={item.image}
