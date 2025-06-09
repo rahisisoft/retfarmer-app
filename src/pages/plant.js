@@ -17,7 +17,7 @@ const translations = {
     failed: "Failed to analyze the input. Please try again.",
     history: "Analysis History",
     clear: "Clear History",
-    rating: "Result Rating"
+    rate: "Rate this result"
   },
   French: {
     title: "Détection de maladie",
@@ -31,7 +31,7 @@ const translations = {
     failed: "Échec de l'analyse. Veuillez réessayer.",
     history: "Historique des analyses",
     clear: "Effacer l'historique",
-    rating: "Évaluation du résultat"
+    rate: "Évaluer ce résultat"
   },
   Kirundi: {
     title: "Kumenya Indwara",
@@ -45,7 +45,7 @@ const translations = {
     failed: "Ntivyagenze neza. Gerageza kandi.",
     history: "Amateka y'isesengura",
     clear: "Siba amateka",
-    rating: "Ingero y'ivyavuyemwo"
+    rate: "Tanga amanota kuri ibi bisubizo"
   },
   Swahili: {
     title: "Ugunduzi wa Magonjwa",
@@ -59,7 +59,7 @@ const translations = {
     failed: "Imeshindikana kuchanganua. Jaribu tena.",
     history: "Historia ya Uchambuzi",
     clear: "Futa Historia",
-    rating: "Alama ya Matokeo"
+    rate: "Kadiria matokeo haya"
   },
 };
 
@@ -68,6 +68,7 @@ export default function Plant() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [rating, setRating] = useState(0);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -91,14 +92,6 @@ export default function Plant() {
     setImagePreview(file ? URL.createObjectURL(file) : null);
   };
 
-  const getResultRating = (text) => {
-    const lowerText = text.toLowerCase();
-    if (lowerText.includes("healthy") || lowerText.includes("no disease")) return "High";
-    if (lowerText.includes("moderate") || lowerText.includes("mild")) return "Medium";
-    if (lowerText.includes("severe") || lowerText.includes("advanced")) return "Low";
-    return "Unknown";
-  };
-
   const analyzeInput = async () => {
     if (!textInput.trim() || !selectedImage) {
       setError(t.error);
@@ -113,26 +106,14 @@ export default function Plant() {
       setLoading(true);
       setError(null);
       setAnalysisResult(null);
+      setRating(0);
 
       const response = await axiosInstance.post("/gemini-api.php", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       const resultText = response.data.text;
-      const rating = getResultRating(resultText);
-      const resultWithRating = `${resultText}\n\n**🟢 ${t.rating}: ${rating}**`;
-
-      setAnalysisResult(resultWithRating);
-
-      const newEntry = {
-        language: textInput,
-        image: imagePreview,
-        result: resultText,
-        rating,
-        timestamp: new Date().toISOString(),
-      };
-
-      setHistory((prev) => [newEntry, ...prev]);
+      setAnalysisResult(resultText);
     } catch (err) {
       console.error("Error analyzing input:", err);
       setError(t.failed);
@@ -141,10 +122,41 @@ export default function Plant() {
     }
   };
 
+  const saveResultWithRating = () => {
+    const newEntry = {
+      language: textInput,
+      image: imagePreview,
+      result: analysisResult,
+      rating,
+      timestamp: new Date().toISOString(),
+    };
+    setHistory((prev) => [newEntry, ...prev]);
+    setAnalysisResult(null);
+    setRating(0);
+  };
+
   const handleClearHistory = () => {
     setHistory([]);
     localStorage.removeItem("analysisHistory");
   };
+
+  const renderStars = (value, setValue, disabled = false) => (
+    <div>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span
+          key={i}
+          onClick={() => !disabled && setValue(i)}
+          style={{
+            fontSize: "1.5rem",
+            color: i <= value ? "gold" : "#ccc",
+            cursor: disabled ? "default" : "pointer",
+          }}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  );
 
   return (
     <UserLayout>
@@ -227,6 +239,17 @@ export default function Plant() {
                     {analysisResult}
                   </ReactMarkdown>
                 </div>
+                <div className="mt-3">
+                  <label className="form-label fw-semibold">⭐ {t.rate}</label>
+                  {renderStars(rating, setRating)}
+                  <button
+                    className="btn btn-outline-success mt-2"
+                    onClick={saveResultWithRating}
+                    disabled={rating === 0}
+                  >
+                    ✅ Save Result
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -246,20 +269,13 @@ export default function Plant() {
                   <li
                     key={index}
                     className="list-group-item list-group-item-action"
-                    onClick={() =>
-                      setAnalysisResult(`${item.result}\n\n**🟢 ${t.rating}: ${item.rating}**`)
-                    }
+                    onClick={() => setAnalysisResult(item.result)}
                     style={{ cursor: "pointer" }}
                   >
                     <div className="d-flex justify-content-between align-items-center">
                       <span>
-                        <strong>{item.language}</strong> –{" "}
-                        {new Date(item.timestamp).toLocaleString()}
-                        {item.rating && (
-                          <span className="ms-2 badge bg-info text-dark">
-                            {t.rating}: {item.rating}
-                          </span>
-                        )}
+                        <strong>{item.language}</strong> – {new Date(item.timestamp).toLocaleString()}
+                        {" • "}⭐ {item.rating || "N/A"}
                       </span>
                       {item.image && (
                         <img
