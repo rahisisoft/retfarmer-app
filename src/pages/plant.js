@@ -16,7 +16,8 @@ const translations = {
     error: "Please provide a language and an image.",
     failed: "Failed to analyze the input. Please try again.",
     history: "Analysis History",
-    clear: "Clear History"
+    clear: "Clear History",
+    rating: "Result Rating"
   },
   French: {
     title: "Détection de maladie",
@@ -29,7 +30,8 @@ const translations = {
     error: "Veuillez choisir une langue et une image.",
     failed: "Échec de l'analyse. Veuillez réessayer.",
     history: "Historique des analyses",
-    clear: "Effacer l'historique"
+    clear: "Effacer l'historique",
+    rating: "Évaluation du résultat"
   },
   Kirundi: {
     title: "Kumenya Indwara",
@@ -42,7 +44,8 @@ const translations = {
     error: "Hitamwo ururimi n’ishusho.",
     failed: "Ntivyagenze neza. Gerageza kandi.",
     history: "Amateka y'isesengura",
-    clear: "Siba amateka"
+    clear: "Siba amateka",
+    rating: "Ingero y'ivyavuyemwo"
   },
   Swahili: {
     title: "Ugunduzi wa Magonjwa",
@@ -55,7 +58,8 @@ const translations = {
     error: "Tafadhali chagua lugha na picha.",
     failed: "Imeshindikana kuchanganua. Jaribu tena.",
     history: "Historia ya Uchambuzi",
-    clear: "Futa Historia"
+    clear: "Futa Historia",
+    rating: "Alama ya Matokeo"
   },
 };
 
@@ -70,7 +74,6 @@ export default function Plant() {
 
   const t = translations[textInput] || translations.English;
 
-  // Charger l'historique au démarrage
   useEffect(() => {
     const stored = localStorage.getItem("analysisHistory");
     if (stored) {
@@ -78,7 +81,6 @@ export default function Plant() {
     }
   }, []);
 
-  // Sauvegarde à chaque changement
   useEffect(() => {
     localStorage.setItem("analysisHistory", JSON.stringify(history));
   }, [history]);
@@ -87,6 +89,14 @@ export default function Plant() {
     const file = e.target.files[0];
     setSelectedImage(file);
     setImagePreview(file ? URL.createObjectURL(file) : null);
+  };
+
+  const getResultRating = (text) => {
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes("healthy") || lowerText.includes("no disease")) return "High";
+    if (lowerText.includes("moderate") || lowerText.includes("mild")) return "Medium";
+    if (lowerText.includes("severe") || lowerText.includes("advanced")) return "Low";
+    return "Unknown";
   };
 
   const analyzeInput = async () => {
@@ -109,12 +119,16 @@ export default function Plant() {
       });
 
       const resultText = response.data.text;
-      setAnalysisResult(resultText);
+      const rating = getResultRating(resultText);
+      const resultWithRating = `${resultText}\n\n**🟢 ${t.rating}: ${rating}**`;
+
+      setAnalysisResult(resultWithRating);
 
       const newEntry = {
         language: textInput,
         image: imagePreview,
         result: resultText,
+        rating,
         timestamp: new Date().toISOString(),
       };
 
@@ -232,13 +246,20 @@ export default function Plant() {
                   <li
                     key={index}
                     className="list-group-item list-group-item-action"
-                    onClick={() => setAnalysisResult(item.result)}
+                    onClick={() =>
+                      setAnalysisResult(`${item.result}\n\n**🟢 ${t.rating}: ${item.rating}**`)
+                    }
                     style={{ cursor: "pointer" }}
                   >
                     <div className="d-flex justify-content-between align-items-center">
                       <span>
                         <strong>{item.language}</strong> –{" "}
                         {new Date(item.timestamp).toLocaleString()}
+                        {item.rating && (
+                          <span className="ms-2 badge bg-info text-dark">
+                            {t.rating}: {item.rating}
+                          </span>
+                        )}
                       </span>
                       {item.image && (
                         <img
