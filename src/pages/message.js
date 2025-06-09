@@ -52,7 +52,7 @@ export default function Message() {
       setError(null);
 
       const apiKey = "AIzaSyDkeRv6K0ORqHrGHK8H83ytc2-iWhecxnA"; // Remplace par ta vraie clé API
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
       const requestData = {
         contents: [
