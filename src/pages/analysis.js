@@ -1,70 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import UserLayout from "@/components/UserLayout";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
-const translations = {
-  English: {
-    title: "Soil Analysis",
-    language: "Language",
-    upload: "Upload an image",
-    analyze: "Analyze",
-    analyzing: "Analyzing...",
-    result: "Analysis Result",
-    preview: "Image Preview",
-    error: "Please provide a language and an image.",
-    failed: "Failed to analyze the input. Please try again.",
-    history: "Analysis History",
-    clear: "Clear History",
-    rate: "Rate this result"
-  },
-  French: {
-    title: "Analyse du Sol",
-    language: "Langue",
-    upload: "Télécharger une image",
-    analyze: "Analyser",
-    analyzing: "Analyse en cours...",
-    result: "Résultat de l'analyse",
-    preview: "Aperçu de l'image",
-    error: "Veuillez choisir une langue et une image.",
-    failed: "Échec de l'analyse. Veuillez réessayer.",
-    history: "Historique des analyses",
-    clear: "Effacer l'historique",
-    rate: "Notez ce résultat"
-  },
-  Kirundi: {
-    title: "Isuzuma ry'ubutaka",
-    language: "Ururimi",
-    upload: "Shira ishusho",
-    analyze: "Suzuma",
-    analyzing: "Biriko birasuzumwa...",
-    result: "Ibisubizo",
-    preview: "Ishusho yerekanywe",
-    error: "Hitamwo ururimi n’ishusho.",
-    failed: "Ntivyagenze neza. Gerageza kandi.",
-    history: "Amateka y'isesengura",
-    clear: "Siba amateka",
-    rate: "Tanga amanota kuri ibi bisubizo"
-  },
-  Swahili: {
-    title: "Ugunduzi wa Udongo",
-    language: "Lugha",
-    upload: "Pakia picha",
-    analyze: "Changanua",
-    analyzing: "Inachanganuliwa...",
-    result: "Matokeo ya Uchambuzi",
-    preview: "Hakikisho la picha",
-    error: "Tafadhali chagua lugha na picha.",
-    failed: "Imeshindikana kuchanganua. Jaribu tena.",
-    history: "Historia ya Uchambuzi",
-    clear: "Futa Historia",
-    rate: "Kadiria matokeo haya"
-  },
-};
+import { LanguageContext } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function Analysis() {
-  const [textInput, setTextInput] = useState("English");
+  const { language, changeLanguage } = useContext(LanguageContext);
+  const { t } = useTranslation("soil");
+
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -72,8 +17,6 @@ export default function Analysis() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentRating, setCurrentRating] = useState(0);
-
-  const t = translations[textInput] || translations.English;
 
   useEffect(() => {
     const stored = localStorage.getItem("soilAnalysisHistory");
@@ -93,13 +36,13 @@ export default function Analysis() {
   };
 
   const analyzeInput = async () => {
-    if (!textInput.trim() || !selectedImage) {
-      setError(t.error);
+    if (!language || !selectedImage) {
+      setError(t.error || "Please select a language and image.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("textInput", textInput);
+    formData.append("textInput", language);
     formData.append("image", selectedImage);
 
     try {
@@ -116,7 +59,7 @@ export default function Analysis() {
       setAnalysisResult(resultText);
     } catch (err) {
       console.error("Error analyzing input:", err);
-      setError(t.failed);
+      setError(t.failed || "Analysis failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -126,7 +69,7 @@ export default function Analysis() {
     if (!analysisResult || !currentRating) return;
 
     const newEntry = {
-      language: textInput,
+      language,
       image: imagePreview,
       result: analysisResult,
       rating: currentRating,
@@ -150,23 +93,7 @@ export default function Analysis() {
           <div className="card-body">
             <h2 className="text-center text-primary mb-4">🌿 {t.title}</h2>
 
-            <div className="mb-3">
-              <label htmlFor="textInput" className="form-label fw-semibold">
-                🌐 {t.language}
-              </label>
-              <select
-                id="textInput"
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                className="form-select"
-              >
-                {Object.keys(translations).map((lang) => (
-                  <option key={lang} value={lang}>
-                    {lang}
-                  </option>
-                ))}
-              </select>
-            </div>
+            
 
             <div className="mb-3">
               <label htmlFor="imageInput" className="form-label fw-semibold">

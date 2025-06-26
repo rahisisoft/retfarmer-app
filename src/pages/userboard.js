@@ -1,68 +1,47 @@
-import UserLayout from "../components/UserLayout"
+import { useEffect, useState, useContext, useTransition } from 'react';
+import UserLayout from "../components/UserLayout";
 import Link from 'next/link';
+import { LanguageContext } from "@/contexts/LanguageContext";
+import axiosInstance from '@/utils/axiosInstance';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const Userboard = () => {
+ 
+  //const { t = {} } = useContext(LanguageContext);
+  const { t } = useTranslation('userboard');
+  const [menuItems, setMenuItems] = useState([]);
+
+  useEffect(() => {
+    axiosInstance.get('/get_menu_items.php')
+      .then(response => {
+        setMenuItems(response.data);
+      })
+      .catch(error => {
+        console.error("Erreur lors du chargement des menus :", error);
+      });
+  }, []);
+
   return (
     <UserLayout>
-    {/* Menu en grid avec box-shadow */}
-    <div className="grid-container">
-              <Link href="/plant" className="card card-menu text-decoration-none">
-                <img
-                    src="/images/detect.jpeg"
-                    alt="Logo"
-                    className="img-fluid w-50 m-auto"
+      <div className="container">
+        <div className="row row-cols-2 row-cols-md-3 g-4">
+          {menuItems.map(item => (
+            <div className="col" key={item.key_name}>
+              <Link href={item.href} className="card card-menu text-decoration-none h-100">
+                <div className="card-body text-center">
+                  <img
+                    src={item.img}
+                    alt={t[item.key_name] || item.key_name}
+                    className="img-fluid w-50 mb-3"
                   />
-                <h5>Desease Detect</h5> 
-                <h6>(Kumenya indwara z'ibimera)</h6>
-              </Link>
-              <Link href="/feed" className="card card-menu text-decoration-none">
-                    <img
-                    src="/images/feed.jpeg"
-                    alt="Logo"
-                    className="img-fluid w-50 m-auto"
-                  />
-                <h5>FeedCheck </h5>
-                <h6>(Izuma ry'Igiti Rigaburirwa ibitungwa)</h6>
-              </Link>
-              <Link href="/weather" className="card card-menu text-decoration-none">
-                <img
-                    src="/images/weather.jpeg"
-                    alt="Logo"
-                    className="img-fluid w-50 m-auto"
-                  />
-                <h5>Forecast</h5>
-                <h6>(Itegure ibihe)</h6>
-              </Link>
-              <Link href="/analysis" className="card card-menu text-decoration-none">
-                <img
-                    src="/images/soil.jpeg"
-                    alt="Logo"
-                    className="img-fluid w-50 m-auto"
-                  />
-                <h5>Soil Analysis</h5>
-                <h6>(Izuma ry'ubutaka)</h6>
-              </Link>
-              <Link href="/market" className="card card-menu text-decoration-none">
-                <img
-                    src="/images/market.jpeg"
-                    alt="Logo"
-                    className="img-fluid w-50 m-auto"
-                  />
-                <h5>Ruzizi Market</h5> 
-                <h6>(Isoko)</h6> 
-              </Link>
-              <Link href="/message" className="card card-menu text-decoration-none">
-                <img
-                    src="/images/chat.jpeg"
-                    alt="Logo"
-                    className="img-fluid w-50 m-auto"
-                  />
-                <h5>Farming Assistant</h5>
-                <h6>(UmufashaIhinguriro)</h6>
+                  <h5 className="card-title">{t[item.key_name] || item.key_name}</h5>
+                </div>
               </Link>
             </div>
+          ))}
+        </div>
+      </div>
     </UserLayout>
-    
   );
 };
 

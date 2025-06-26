@@ -1,14 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useContext } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import { useRouter } from "next/router";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { LanguageContext } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 function Login() {
+  const { language, changeLanguage } = useContext(LanguageContext);
+  const { t } = useTranslation('login');
   const [form, setForm] = useState({ email: "", password: "", remember: false });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+
+  const flags = {
+    en: { name: "English", icon: "🇬🇧" },
+    fr: { name: "Français", icon: "🇫🇷" },
+    rn: { name: "Kirundi", icon: "🇧🇮" },
+    sw: { name: "Swahili", icon: "🇹🇿" }
+  };
+
+   const openTranslations = () => {
+    router.push('/translations');  // adapte le chemin si besoin
+  };
 
   // Rediriger automatiquement si token déjà présent
   useEffect(() => {
@@ -57,16 +72,30 @@ function Login() {
     <div className="container d-flex align-items-center justify-content-center min-vh-100">
       <div className="card shadow-lg p-4" style={{ maxWidth: "400px", width: "100%" }}>
         <div className="text-center mb-4">
-          <img src="/images/logo.jpeg" alt="Logo" className="img-fluid" />
-          <h3 className="mt-2">Login to Your Account</h3>
+          <img src="/images/logo.jpg" alt="Logo" className="img-fluid" />
+          <h3 className="mt-2">{t.title || "Injira kuri Konti yawe"}</h3>
         </div>
         <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <h4>🌐 {t.language}</h4>
+          <select
+          className="form-select"
+          value={language}
+          onChange={(e) => changeLanguage(e.target.value)}
+        >
+          {Object.entries(flags).map(([langCode, { icon, name }]) => (
+            <option key={langCode} value={langCode}>
+              {icon} {name}
+            </option>
+          ))}
+        </select>
+          </div>
           <div className="mb-3">
             <input
               name="email"
               type="email"
               className="form-control"
-              placeholder="Email"
+              placeholder={t.email}
               value={form.email}
               onChange={handleChange}
               required
@@ -77,7 +106,7 @@ function Login() {
               name="password"
               type={showPassword ? "text" : "password"}
               className="form-control pe-5"
-              placeholder="Password"
+              placeholder={t.password}
               value={form.password}
               onChange={handleChange}
               required
@@ -101,7 +130,7 @@ function Login() {
               id="rememberCheck"
             />
             <label className="form-check-label" htmlFor="rememberCheck">
-              Remember me
+              {t.remember || "Nunyibuke"}
             </label>
           </div>
           <button type="submit" className="btn btn-primary w-100" disabled={loading}>
@@ -110,14 +139,14 @@ function Login() {
                 <span className="spinner-border spinner-border-sm me-2"></span> Logging in...
               </>
             ) : (
-              "Login"
+              t.login
             )}
           </button>
           {error && <p className="text-danger mt-3">{error}</p>}
         </form>
         <p className="mt-3 text-center">
           <a className="btn btn-secondary w-100 mt-2" href="/register">
-            Register
+            {t.register}
           </a>
         </p>
       </div>

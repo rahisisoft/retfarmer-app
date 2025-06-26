@@ -1,7 +1,7 @@
 import axiosInstance from "../utils/axiosInstance";
 import { useState, useEffect } from 'react';
-import UserLayout from "../components/UserLayout"
-import ProductForm from "@/components/ProductFormx";
+import MarketplaceLayout from "@/components/MarketplaceLayout";
+import ProductForm from "@/components/ProductForm";
 import ProductList from "@/components/ProductList";
 
 export default function ProductsPage() {
@@ -31,12 +31,11 @@ export default function ProductsPage() {
     };*/
 
     return (
-      <UserLayout>
+      <MarketplaceLayout>
             <div className="container mt-4">
                 <input className="form-control mb-3" type="text" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
-                <ProductForm fetchProducts={fetchProducts} />
-                <ProductList products={products} setPage={setPage} page={page} />
+                <ProductForm/>
             </div>
-      </UserLayout>
+      </MarketplaceLayout>
     );
 }

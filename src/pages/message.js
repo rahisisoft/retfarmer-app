@@ -3,10 +3,13 @@ import axios from "axios";
 import UserLayout from "@/components/UserLayout";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { LanguageContext } from "@/contexts/LanguageContext";
+import { useTranslation } from '@/hooks/useTranslation';
 
 const STORAGE_KEY = "chat_conversations";
 
 export default function Message() {
+  const { t } = useTranslation('chat');
   const [textInput, setTextInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -105,7 +108,7 @@ export default function Message() {
     <UserLayout>
       <div className={`container py-4 ${darkMode ? "dark" : "light"}`} style={{ maxWidth: "700px" }}>
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h2>💬 RETFARMER Assistant</h2>
+          <h2><img src="images/chat.jpg" className="w-25"/> {t.title || "RETFARMER Assistant"}</h2>
           <div>
             <button className="btn btn-outline-secondary me-2" onClick={() => setDarkMode(!darkMode)}>
               {darkMode ? "🌞 Light Mode" : "🌙 Dark Mode"}
@@ -155,7 +158,7 @@ export default function Message() {
         <div className="input-group">
           <textarea
             className="form-control"
-            placeholder="Type your message (Enter to send, Shift+Enter for newline)..."
+            placeholder={t.placeholder || "Type your question"}
             value={textInput}
             onChange={(e) => setTextInput(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -174,7 +177,7 @@ export default function Message() {
                 Sending...
               </>
             ) : (
-              "Send"
+              t.button
             )}
           </button>
         </div>

@@ -96,3 +96,42 @@ main_user_content {
   border-radius: 8px;
   margin-top: 1rem;
 }
+
+body {
+  background-color: #f5f7fa !important;
+}
+
+.market-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.market-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.product-img {
+  height: 200px;
+  object-fit: cover;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.modal-body img {
+  border-radius: 8px;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.btn-primary, .btn-success, .btn-warning {
+  border-radius: 8px;
+}
+
+.review-list .list-group-item {
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background-color: #f8f9fa;
+}
+

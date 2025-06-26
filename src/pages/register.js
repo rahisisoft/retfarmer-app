@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import Link from "next/link";
+import { LanguageContext } from "@/contexts/LanguageContext";
+import { useTranslation } from '@/hooks/useTranslation';
 
 const countries = [
   { name: "Burundi", code: "BU", dial_code: "+257" },
@@ -9,6 +11,9 @@ const countries = [
 ];
 
 function Register() {
+  const { language } = useContext(LanguageContext);
+  const { t } = useTranslation('register');
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -28,11 +33,8 @@ function Register() {
 
   // Validation rules
   const passwordRules = [
-    { regex: /.{8,}/, label: "At least 8 characters" },
-    { regex: /[A-Z]/, label: "One uppercase letter" },
-    { regex: /[a-z]/, label: "One lowercase letter" },
+    { regex: /.{6,}/, label: "At least 6 characters" },
     { regex: /[0-9]/, label: "One number" },
-    { regex: /[^A-Za-z0-9]/, label: "One special character" },
   ];
 
   // Validate fields on change
@@ -149,34 +151,35 @@ function Register() {
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center vh-100">
+    <div className="container-fluid d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
+
       <div className="card shadow p-4" style={{ maxWidth: "500px", width: "100%" }}>
         <div className="text-center mb-4">
-          <img src="/images/logo.jpeg" alt="Logo" className="img-fluid" />
-          <h3 className="mt-2">Create an account</h3>
+          <img src="/images/logo.jpg" alt="Logo" className="img-fluid w-75" />
+          <h3 className="mt-2">{t.title}</h3>
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
           {[
-            { label: "Full Name", name: "name", type: "text", placeholder: "John Doe" },
-            { label: "Email address", name: "email", type: "email", placeholder: "email@example.com" },
+            { label: t.name, name: "name", type: "text", placeholder: "" },
+            { label: t.email, name: "email", type: "email", placeholder: "" },
             {
-              label: "Country",
+              label: t.country,
               name: "country",
               type: "select",
               options: countries.map((c) => ({ value: c.code, label: c.name })),
             },
             {
-              label: "Phone",
+              label: t.phone,
               name: "phone",
               type: "phone",
-              placeholder: "123456789",
+              placeholder: "",
             },
             {
-              label: "Job",
+              label: t.job,
               name: "job",
               type: "text",
-              placeholder: "Web Developer, Student...",
+              placeholder: "",
             },
           ].map(({ label, name, type, placeholder, options }) => (
             <div
@@ -192,7 +195,7 @@ function Register() {
                   value={form[name]}
                   required
                 >
-                  <option value="">Select country</option>
+                  <option value="">{t.select_country}</option>
                   {options.map((opt) => (
                     <option key={opt.value} value={opt.value}>
                       {opt.label}
@@ -232,13 +235,13 @@ function Register() {
 
           {/* Password Field with show/hide */}
           <div className={`mb-3 ${shakeFields.includes("password") ? "animate-shake" : ""}`}>
-            <label className="form-label">Password</label>
+            <label className="form-label">{t.password}</label>
             <div className="input-group">
               <input
                 name="password"
                 type={showPassword ? "text" : "password"}
                 className={`form-control ${errors.password ? "is-invalid" : ""}`}
-                placeholder="Password"
+                placeholder={t.password}
                 onChange={handleChange}
                 value={form.password}
                 required
@@ -288,13 +291,13 @@ function Register() {
 
           {/* Confirm Password with show/hide */}
           <div className={`mb-3 ${shakeFields.includes("confirmPassword") ? "animate-shake" : ""}`}>
-            <label className="form-label">Confirm Password</label>
+            <label className="form-label">{t.confirm_password}</label>
             <div className="input-group">
               <input
                 name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 className={`form-control ${errors.confirmPassword ? "is-invalid" : ""}`}
-                placeholder="Confirm Password"
+                placeholder={t.confirm_password}
                 onChange={handleChange}
                 value={form.confirmPassword}
                 required
@@ -328,7 +331,7 @@ function Register() {
                 aria-hidden="true"
               ></span>
             )}
-            {loading ? "Registering..." : "Register"}
+            {loading ? t.registering : t.register}
           </button>
         </form>
 
@@ -343,9 +346,9 @@ function Register() {
         )}
 
         <p className="mt-3 text-center">
-          Already have an account?{" "}
+          {t.already_account}?{" "}
           <Link href="/" className="text-decoration-none">
-            Login here
+            {t.login_here}
           </Link>
         </p>
 

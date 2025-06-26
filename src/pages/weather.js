@@ -1,11 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axiosInstance from "@/utils/axiosInstance";
 import axios from "axios";
 import UserLayout from "@/components/UserLayout";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSun, faCloudRain, faCloud, faSnowflake } from "@fortawesome/free-solid-svg-icons";
-import Calendar from 'react-calendar';
-import { useEffect } from 'react';
-
+import { useRouter } from "next/router";
 
 export default function Weather() {
   const [location, setLocation] = useState("");
@@ -13,15 +10,43 @@ export default function Weather() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const agriculturalEvents = {
-  '2025-01-10': 'Récolte du maïs (saison A)',
-  '2025-02-15': 'Semis de haricots (saison B)',
-  '2025-03-05': 'Traitement phytosanitaire',
-  '2025-10-01': 'Semis du maïs et manioc',
-  // Ajoute d'autres événements ici
-};
+  const [cropAlerts, setCropAlerts] = useState([]);
+  const [nextSeasonAlerts, setNextSeasonAlerts] = useState([]);
+  const [upcomingAlerts, setUpcomingAlerts] = useState([]);
 
+  const [regions, setRegions] = useState([]);
+  const [crops, setCrops] = useState([]);
+
+  const [filterRegion, setFilterRegion] = useState("");
+  const [filterCrop, setFilterCrop] = useState("");
+  
+  const [expandedDays, setExpandedDays] = useState({});
+
+  const router = useRouter();
   const apiKey = "bd499e8f4ad501f0536b34ae2208c9be";
+
+  // Charger régions & cultures pour filtres
+  useEffect(() => {
+    axiosInstance.get("/get_regions.php").then(res => setRegions(res.data));
+    axiosInstance.get("/get_crops.php").then(res => setCrops(res.data));
+  }, []);
+
+  // Charger alertes du jour & saison suivante
+  useEffect(() => {
+    axiosInstance.get("/get_crop_alerts.php").then(res => setCropAlerts(res.data));
+    axiosInstance.get("/get_crop_next_season_alerts.php").then(res => setNextSeasonAlerts(res.data.alerts || []));
+  }, []);
+
+  // Charger alertes à venir selon filtres
+  useEffect(() => {
+    const params = {};
+    if (filterRegion) params.region_id = filterRegion;
+    if (filterCrop) params.crop_id = filterCrop;
+
+    axiosInstance.get("/get_crop_upcoming_alerts.php", { params })
+      .then(res => setUpcomingAlerts(res.data || []))
+      .catch(err => console.error("Erreur chargement alertes à venir :", err));
+  }, [filterRegion, filterCrop]);
 
   const fetchWeather = async () => {
     try {
@@ -46,6 +71,63 @@ export default function Weather() {
 
   const getWeatherIconUrl = (iconCode) => `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
 
+  const toggleDayDetails = (date) => {
+    setExpandedDays(prev => ({
+      ...prev,
+      [date]: !prev[date]
+    }));
+  };
+
+  const getWeatherAdvice = (dayData) => {
+    const conditions = dayData.map(item => item.weather[0].main);
+    const temps = dayData.map(item => item.main.temp);
+    const maxTemp = Math.max(...temps);
+    const minTemp = Math.min(...temps);
+    const humidities = dayData.map(item => item.main.humidity);
+    const avgHumidity = humidities.reduce((a, b) => a + b, 0) / humidities.length;
+    
+    if (conditions.includes("Rain")) {
+      return "🌧️ Pluie prévue - Évitez les traitements chimiques et profitez de l'irrigation naturelle";
+    }
+    if (maxTemp > 30) {
+      return "🔥 Fortes chaleurs - Augmentez l'arrosage pour éviter le stress hydrique des cultures";
+    }
+    if (minTemp < 5) {
+      return "❄️ Risque de gel - Protégez les cultures sensibles avec des voiles d'hivernage";
+    }
+    if (conditions.includes("Clear") && maxTemp > 25) {
+      return "☀️ Temps ensoleillé - Conditions idéales pour les récoltes et les semis";
+    }
+    if (avgHumidity > 80) {
+      return "💧 Humidité élevée - Surveillez l'apparition de maladies fongiques";
+    }
+    return "🌾 Conditions normales - Poursuivez vos activités agricoles habituelles";
+  };
+
+  const getDayIcon = (dayData) => {
+    const conditions = dayData.map(item => item.weather[0].main);
+    if (conditions.includes("Thunderstorm")) return "⛈️";
+    if (conditions.includes("Rain")) return "🌧️";
+    if (conditions.includes("Snow")) return "❄️";
+    if (conditions.includes("Clear")) return "☀️";
+    if (conditions.includes("Clouds")) return "☁️";
+    return "🌤️";
+  };
+
+  const calculateDayAverages = (dayData) => {
+    const temps = dayData.map(item => item.main.temp);
+    const humidities = dayData.map(item => item.main.humidity);
+    const winds = dayData.map(item => item.wind.speed);
+    
+    return {
+      avgTemp: (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1),
+      maxTemp: Math.max(...temps).toFixed(1),
+      minTemp: Math.min(...temps).toFixed(1),
+      avgHumidity: (humidities.reduce((a, b) => a + b, 0) / humidities.length).toFixed(0),
+      maxWind: Math.max(...winds).toFixed(1)
+    };
+  };
+
   const groupDataByDate = () => {
     if (!forecast) return null;
     return forecast.list.reduce((acc, item) => {
@@ -60,86 +142,255 @@ export default function Weather() {
 
   return (
     <UserLayout>
-      <div className="weather-card container">
-        <h1 className="mb-4">Weather Forecast</h1>
-        <div className="input-group mb-3">
-          <input
-            type="text"
-            placeholder="Enter location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="form-control"
-          />
-          <button onClick={fetchWeather} className="btn btn-primary">
-            {loading ? "Getting..." : "Get Forecast"}
-          </button>
-        </div>
+      <div className="container py-4">
+        <div className="row">
+          {/* Colonne gauche - Météo */}
+          <div className="col-md-8">
+            <div className="card shadow-sm mb-4">
+              <div className="card-body">
+                <h2 className="mb-4">🌤️ Prévision Météo Agricole</h2>
+                <div className="alert alert-info">
+                  <strong>📊 Comment interpréter ces données :</strong> 
+                  <ul className="mb-0 mt-2">
+                    <li>Les prévisions impactent directement vos cultures et activités agricoles</li>
+                    <li>Les icônes colorées indiquent les conditions dominantes</li>
+                    <li>Les conseils agricoles sont générés automatiquement</li>
+                  </ul>
+                </div>
+                
+                <div className="input-group my-3">
+                  <input
+                    type="text"
+                    placeholder="Entrez une localité (ex: Paris, FR)"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="form-control"
+                  />
+                  <button onClick={fetchWeather} className="btn btn-primary">
+                    {loading ? "Chargement..." : "Afficher"}
+                  </button>
+                </div>
+                
+                {error && <div className="alert alert-danger">{error}</div>}
+                
+                {forecast && groupedForecast && (
+                  <div>
+                    <h5 className="text-success mb-3">
+                      📍 {forecast.city.name}, {forecast.city.country} | 
+                      Population: {forecast.city.population?.toLocaleString() || "N/A"}
+                    </h5>
+                    
+                    {/* Légende des symboles */}
+                    <div className="d-flex flex-wrap gap-2 mb-3">
+                      <small><span className="text-danger fw-bold">●</span> Température élevée</small>
+                      <small><span className="text-primary fw-bold">●</span> Température basse</small>
+                      <small><span className="text-warning fw-bold">●</span> Vent fort</small>
+                      <small><span className="text-success fw-bold">●</span> Conditions optimales</small>
+                    </div>
 
-        {error && <p className="text-danger">{error}</p>}
-
-        {forecast && groupedForecast && (
-          <div className="mt-4">
-            <h3 className="text-primary">Weather Details for {forecast.city.name}</h3>
-            {Object.entries(groupedForecast).map(([date, data], index) => (
-              <div key={index} className="mb-4">
-                <div className="date-title">{date}</div>
-                <table className="table table-bordered mt-2">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Time</th>
-                      <th>Temp (°C)</th>
-                      <th>Description</th>
-                      <th>Humidity / Pressure</th>
-                      <th>Wind</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.map((item, idx) => (
-                      <tr key={idx}>
-                        <td>{item.dt_txt.split(" ")[1]}</td>
-                        <td>{item.main.temp} °C</td>
-                        <td>
-                          {item.weather[0].description}
-                          <img
-                            src={getWeatherIconUrl(item.weather[0].icon)}
-                            alt={item.weather[0].description}
-                            className="weather-icon"
-                          />
-                        </td>
-                        <td>{item.main.humidity}% ~ {item.main.pressure} hPa</td>
-                        <td>
-                          Speed: {item.wind.speed} m/s<br />
-                          Dir: {item.wind.deg}°
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    {Object.entries(groupedForecast).map(([date, dayData], i) => {
+                      const dayAverages = calculateDayAverages(dayData);
+                      const dayAdvice = getWeatherAdvice(dayData);
+                      const dayIcon = getDayIcon(dayData);
+                      
+                      return (
+                        <div key={i} className="mb-4 border rounded p-3">
+                          <div 
+                            className="d-flex justify-content-between align-items-center mb-2 cursor-pointer"
+                            onClick={() => toggleDayDetails(date)}
+                          >
+                            <h5 className="mb-0">
+                              {dayIcon} {new Date(date).toLocaleDateString('fr-FR', { 
+                                weekday: 'long', 
+                                day: 'numeric', 
+                                month: 'long' 
+                              })}
+                            </h5>
+                            <div>
+                              <span className="text-danger fw-bold">{dayAverages.maxTemp}°C</span> / 
+                              <span className="text-primary fw-bold"> {dayAverages.minTemp}°C</span>
+                              <span className="ms-2">💧 {dayAverages.avgHumidity}%</span>
+                              <span className="ms-2">🌬️ {dayAverages.maxWind}m/s</span>
+                              <button 
+                                className="btn btn-sm btn-outline-secondary ms-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleDayDetails(date);
+                                }}
+                              >
+                                {expandedDays[date] ? "Réduire" : "Détails"}
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div className="text-success mb-2">
+                            <strong>Conseil agricole :</strong> {dayAdvice}
+                          </div>
+                          
+                          {expandedDays[date] && (
+                            <table className="table table-sm table-bordered mt-2">
+                              <thead className="table-light">
+                                <tr>
+                                  <th>Heure</th>
+                                  <th>Temp (°C)</th>
+                                  <th>Conditions</th>
+                                  <th>Humidité</th>
+                                  <th>Vent</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {dayData.map((item, idx) => {
+                                  const isHot = item.main.temp > 28;
+                                  const isCold = item.main.temp < 10;
+                                  const isWindy = item.wind.speed > 8;
+                                  
+                                  return (
+                                    <tr key={idx}>
+                                      <td>{item.dt_txt.split(" ")[1].substring(0, 5)}</td>
+                                      <td className={isHot ? "text-danger fw-bold" : isCold ? "text-primary fw-bold" : ""}>
+                                        {item.main.temp}°C
+                                      </td>
+                                      <td>
+                                        <span className="d-inline-flex align-items-center">
+                                          <img
+                                            src={getWeatherIconUrl(item.weather[0].icon)}
+                                            alt={item.weather[0].description}
+                                            className="me-2"
+                                            style={{ width: 30 }}
+                                          />
+                                          {item.weather[0].description}
+                                        </span>
+                                      </td>
+                                      <td>{item.main.humidity}%</td>
+                                      <td className={isWindy ? "text-warning fw-bold" : ""}>
+                                        {item.wind.speed} m/s
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            ))}
+            </div>
           </div>
-        )}
 
-        {/* Calendrier Agricole du Burundi */}
-        <div className="mt-5">
-  <h3 className="text-success">📅 Calendrier Agricole du Burundi</h3>
-  <Calendar
-    onClickDay={(value) => {
-      const key = value.toISOString().split('T')[0];
-      const event = agriculturalEvents[key];
-      if (event) {
-        alert(`📌 ${event}`);
-      }
-    }}
-    tileContent={({ date }) => {
-      const key = date.toISOString().split('T')[0];
-      return agriculturalEvents[key] ? (
-        <div style={{ fontSize: '0.7em', color: 'green' }}>📍</div>
-      ) : null;
-    }}
-  />
-</div>
+          {/* Colonne droite - Alertes avec filtres */}
+          <div className="col-md-4">
+            <div className="card mb-3 shadow-sm">
+              <div className="card-body text-center">
+                <button
+                  className="btn btn-outline-success w-100"
+                  onClick={() => router.push("/adminCal")}
+                >
+                  📅 Gérer le Calendrier Agricole
+                </button>
+              </div>
+            </div>
 
+            {/* Filtres */}
+            <div className="card mb-3 shadow-sm">
+              <div className="card-body">
+                <h5>Filtres Alertes À Venir</h5>
+                <div className="mb-2">
+                  <select
+                    className="form-select"
+                    value={filterRegion}
+                    onChange={(e) => setFilterRegion(e.target.value)}
+                  >
+                    <option value="">Toutes Régions</option>
+                    {regions.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <select
+                    className="form-select"
+                    value={filterCrop}
+                    onChange={(e) => setFilterCrop(e.target.value)}
+                  >
+                    <option value="">Toutes Cultures</option>
+                    {crops.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Alertes du jour */}
+            <div className="card mb-3 shadow-sm">
+              <div className="card-body">
+                <h5 className="card-title">🔔 Alertes du Jour</h5>
+                {cropAlerts.length === 0 ? (
+                  <p className="text-muted">Aucune alerte aujourd’hui.</p>
+                ) : (
+                  <ul className="list-group list-group-flush">
+                    {cropAlerts.map((item, idx) => {
+                      const today = new Date().toISOString().split("T")[0];
+                      const isSowing = item.sowing_start <= today && today <= item.sowing_end;
+                      return (
+                        <li className="list-group-item small" key={idx}>
+                          {isSowing ? (
+                            <>📌 <strong>Semis de {item.crop}</strong> ({item.region}, {item.season})</>
+                          ) : (
+                            <>🌾 <strong>Récolte de {item.crop}</strong> ({item.region}, {item.season})</>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </div>
+            {/* Alertes prochaines activités */}
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <h5 className="card-title">📅 À Venir (15 jours)</h5>
+                {upcomingAlerts.length === 0 ? (
+                  <p className="text-muted">Aucune activité prévue dans 15 jours.</p>
+                ) : (
+                  <ul className="list-group list-group-flush">
+                    {upcomingAlerts.map((item, idx) => (
+                      <li className="list-group-item small" key={idx}>
+                        🔄 <strong>{item.crop}</strong> ({item.region})<br />
+                        {item.type === "sowing" ? "Semis" : "Récolte"} prévu le {item.date}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+            {/* Saison suivante */}
+            <div className="card mb-3 shadow-sm">
+              <div className="card-body">
+                <h5 className="card-title">🧭 Saison Suivante</h5>
+                {nextSeasonAlerts.length === 0 ? (
+                  <p className="text-muted">Aucune donnée.</p>
+                ) : (
+                  <ul className="list-group list-group-flush">
+                    {nextSeasonAlerts.map((item, idx) => (
+                      <li className="list-group-item small" key={idx}>
+                        🌱 <strong>{item.crop}</strong> à <em>{item.region}</em><br />
+                        Semis : {item.sowing_start} ➜ {item.sowing_end}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </UserLayout>
   );

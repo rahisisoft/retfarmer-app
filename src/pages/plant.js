@@ -1,70 +1,15 @@
-import { useState, useEffect } from "react";
+import { useContext, useEffect, useState, useCallback, useMemo } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import UserLayout from "@/components/UserLayout";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
-const translations = {
-  English: {
-    title: "Disease Detection",
-    language: "Language",
-    upload: "Upload an image",
-    analyze: "Analyze",
-    analyzing: "Analyzing...",
-    result: "Analysis Result",
-    preview: "Image Preview",
-    error: "Please provide a language and an image.",
-    failed: "Failed to analyze the input. Please try again.",
-    history: "Analysis History",
-    clear: "Clear History",
-    rate: "Rate this result"
-  },
-  French: {
-    title: "Détection de maladie",
-    language: "Langue",
-    upload: "Télécharger une image",
-    analyze: "Analyser",
-    analyzing: "Analyse en cours...",
-    result: "Résultat de l'analyse",
-    preview: "Aperçu de l'image",
-    error: "Veuillez choisir une langue et une image.",
-    failed: "Échec de l'analyse. Veuillez réessayer.",
-    history: "Historique des analyses",
-    clear: "Effacer l'historique",
-    rate: "Évaluer ce résultat"
-  },
-  Kirundi: {
-    title: "Kumenya Indwara",
-    language: "Ururimi",
-    upload: "Shira ishusho",
-    analyze: "Suzuma",
-    analyzing: "Biriko birasuzumwa...",
-    result: "Ibisubizo",
-    preview: "Ishusho yerekanywe",
-    error: "Hitamwo ururimi n’ishusho.",
-    failed: "Ntivyagenze neza. Gerageza kandi.",
-    history: "Amateka y'isesengura",
-    clear: "Siba amateka",
-    rate: "Tanga amanota kuri ibi bisubizo"
-  },
-  Swahili: {
-    title: "Ugunduzi wa Magonjwa",
-    language: "Lugha",
-    upload: "Pakia picha",
-    analyze: "Changanua",
-    analyzing: "Inachanganuliwa...",
-    result: "Matokeo ya Uchambuzi",
-    preview: "Hakikisho la picha",
-    error: "Tafadhali chagua lugha na picha.",
-    failed: "Imeshindikana kuchanganua. Jaribu tena.",
-    history: "Historia ya Uchambuzi",
-    clear: "Futa Historia",
-    rate: "Kadiria matokeo haya"
-  },
-};
+import { LanguageContext } from "@/contexts/LanguageContext";
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function Plant() {
-  const [textInput, setTextInput] = useState("English");
+  const { language } = useContext(LanguageContext);
+  const { t } = useTranslation('plant');
+
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -73,8 +18,7 @@ export default function Plant() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const t = translations[textInput] || translations.English;
-
+  // Charger l'historique uniquement au montage initial
   useEffect(() => {
     const stored = localStorage.getItem("analysisHistory");
     if (stored) {
@@ -82,24 +26,39 @@ export default function Plant() {
     }
   }, []);
 
+  // Sauvegarder l'historique seulement quand il change
   useEffect(() => {
-    localStorage.setItem("analysisHistory", JSON.stringify(history));
+    if (history.length > 0) {
+      localStorage.setItem("analysisHistory", JSON.stringify(history));
+    }
   }, [history]);
 
-  const handleImageChange = (e) => {
+  // Gestion propre des URLs d'aperçu d'image
+  useEffect(() => {
+    if (selectedImage) {
+      const objectUrl = URL.createObjectURL(selectedImage);
+      setImagePreview(objectUrl);
+      
+      // Nettoyage: révoquer l'URL quand elle n'est plus nécessaire
+      return () => URL.revokeObjectURL(objectUrl);
+    } else {
+      setImagePreview(null);
+    }
+  }, [selectedImage]);
+
+  const handleImageChange = useCallback((e) => {
     const file = e.target.files[0];
     setSelectedImage(file);
-    setImagePreview(file ? URL.createObjectURL(file) : null);
-  };
+  }, []);
 
-  const analyzeInput = async () => {
-    if (!textInput.trim() || !selectedImage) {
-      setError(t.error);
+  const analyzeInput = useCallback(async () => {
+    if (!language || !selectedImage) {
+      setError(t.error || "Please select an image and ensure language is set");
       return;
     }
 
     const formData = new FormData();
-    formData.append("textInput", textInput);
+    formData.append("textInput", language);
     formData.append("image", selectedImage);
 
     try {
@@ -112,35 +71,40 @@ export default function Plant() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const resultText = response.data.text;
-      setAnalysisResult(resultText);
+      setAnalysisResult(response.data.text);
     } catch (err) {
       console.error("Error analyzing input:", err);
-      setError(t.failed);
+      setError(t.failed || "Analysis failed. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [language, selectedImage, t]);
 
-  const saveResultWithRating = () => {
+  const saveResultWithRating = useCallback(() => {
     const newEntry = {
-      language: textInput,
+      language,
       image: imagePreview,
       result: analysisResult,
       rating,
       timestamp: new Date().toISOString(),
     };
-    setHistory((prev) => [newEntry, ...prev]);
+    
+    setHistory((prev) => {
+      const newHistory = [newEntry, ...prev];
+      localStorage.setItem("analysisHistory", JSON.stringify(newHistory));
+      return newHistory;
+    });
+    
     setAnalysisResult(null);
     setRating(0);
-  };
+  }, [language, imagePreview, analysisResult, rating]);
 
-  const handleClearHistory = () => {
+  const handleClearHistory = useCallback(() => {
     setHistory([]);
     localStorage.removeItem("analysisHistory");
-  };
+  }, []);
 
-  const renderStars = (value, setValue, disabled = false) => (
+  const renderStars = useCallback((value, setValue, disabled = false) => (
     <div>
       {[1, 2, 3, 4, 5].map((i) => (
         <span
@@ -156,36 +120,64 @@ export default function Plant() {
         </span>
       ))}
     </div>
-  );
+  ), []);
+
+  // Mémoïsation de la section d'historique pour optimiser les rendus
+  const historySection = useMemo(() => {
+    if (history.length === 0) return null;
+    
+    return (
+      <div className="card shadow-sm border-0 mt-4">
+        <div className="card-body">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="text-secondary">🕘 {t.history || "History"}</h5>
+            <button 
+              className="btn btn-sm btn-outline-danger" 
+              onClick={handleClearHistory}
+            >
+              🗑 {t.clear || "Clear"}
+            </button>
+          </div>
+          <ul className="list-group">
+            {history.map((item, index) => (
+              <li
+                key={index}
+                className="list-group-item list-group-item-action"
+                onClick={() => setAnalysisResult(item.result)}
+                style={{ cursor: "pointer" }}
+              >
+                <div className="d-flex justify-content-between align-items-center">
+                  <span>
+                    <strong>{item.language}</strong> – {new Date(item.timestamp).toLocaleString()}
+                    {" • "}⭐ {item.rating || "N/A"}
+                  </span>
+                  {item.image && (
+                    <img
+                      src={item.image}
+                      alt="preview"
+                      height={40}
+                      className="rounded border"
+                    />
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  }, [history, t, handleClearHistory]);
 
   return (
     <UserLayout>
       <div className="container py-4">
         <div className="card shadow-sm border-0 mb-4">
           <div className="card-body">
-            <h2 className="text-center text-primary mb-4">🌿 {t.title}</h2>
-
-            <div className="mb-3">
-              <label htmlFor="textInput" className="form-label fw-semibold">
-                🌐 {t.language}
-              </label>
-              <select
-                id="textInput"
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                className="form-select"
-              >
-                {Object.keys(translations).map((lang) => (
-                  <option key={lang} value={lang}>
-                    {lang}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <h2 className="text-center text-primary mb-4">🌿 {t.title || "Plant Analysis"}</h2>
 
             <div className="mb-3">
               <label htmlFor="imageInput" className="form-label fw-semibold">
-                🖼️ {t.upload}
+                🖼️ {t.upload || "Upload Image"}
               </label>
               <input
                 type="file"
@@ -198,7 +190,7 @@ export default function Plant() {
 
             {imagePreview && (
               <div className="mb-3 text-center">
-                <h6 className="text-muted">{t.preview}:</h6>
+                <h6 className="text-muted">{t.preview || "Preview"}:</h6>
                 <img
                   src={imagePreview}
                   alt="Selected"
@@ -211,16 +203,16 @@ export default function Plant() {
             <div className="d-grid">
               <button
                 onClick={analyzeInput}
-                disabled={loading}
+                disabled={loading || !selectedImage}
                 className="btn btn-primary"
               >
                 {loading ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2" role="status" />
-                    {t.analyzing}
+                    {t.analyzing || "Analyzing..."}
                   </>
                 ) : (
-                  <>🔍 {t.analyze}</>
+                  <>🔍 {t.analyze || "Analyze"}</>
                 )}
               </button>
             </div>
@@ -233,21 +225,21 @@ export default function Plant() {
 
             {analysisResult && (
               <div className="mt-4">
-                <h4 className="text-success">✅ {t.result}</h4>
+                <h4 className="text-success">✅ {t.result || "Result"}</h4>
                 <div className="mt-2 p-3 border rounded bg-light">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {analysisResult}
                   </ReactMarkdown>
                 </div>
                 <div className="mt-3">
-                  <label className="form-label fw-semibold">⭐ {t.rate}</label>
+                  <label className="form-label fw-semibold">⭐ {t.rate || "Rate Result"}</label>
                   {renderStars(rating, setRating)}
                   <button
                     className="btn btn-outline-success mt-2"
                     onClick={saveResultWithRating}
                     disabled={rating === 0}
                   >
-                    ✅ Save Result
+                    ✅ {t.save || "Save Result"}
                   </button>
                 </div>
               </div>
@@ -255,43 +247,7 @@ export default function Plant() {
           </div>
         </div>
 
-        {history.length > 0 && (
-          <div className="card shadow-sm border-0">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5 className="text-secondary">🕘 {t.history}</h5>
-                <button className="btn btn-sm btn-outline-danger" onClick={handleClearHistory}>
-                  🗑 {t.clear}
-                </button>
-              </div>
-              <ul className="list-group">
-                {history.map((item, index) => (
-                  <li
-                    key={index}
-                    className="list-group-item list-group-item-action"
-                    onClick={() => setAnalysisResult(item.result)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span>
-                        <strong>{item.language}</strong> – {new Date(item.timestamp).toLocaleString()}
-                        {" • "}⭐ {item.rating || "N/A"}
-                      </span>
-                      {item.image && (
-                        <img
-                          src={item.image}
-                          alt="preview"
-                          height={40}
-                          className="rounded border"
-                        />
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
+        {historySection}
       </div>
     </UserLayout>
   );

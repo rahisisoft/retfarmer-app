@@ -4,6 +4,7 @@ import 'react-calendar/dist/Calendar.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import '../styles/globals.css';
 import 'nprogress/nprogress.css';
+import LanguageProvider from "../contexts/LanguageProvider";
 
 import NProgress from 'nprogress';
 import Router from 'next/router';
@@ -43,12 +44,13 @@ export default function MyApp({ Component, pageProps }) {
           rel="stylesheet"
         />
       </Head>
-
+    <LanguageProvider>
       <UserProvider>
         <CartProvider>
           <Component {...pageProps} />
         </CartProvider>
       </UserProvider>
+      </LanguageProvider>
     </>
   );
 }

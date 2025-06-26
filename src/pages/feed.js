@@ -1,66 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import UserLayout from "@/components/UserLayout";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { LanguageContext } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
-const translations = {
-  English: {
-    title: "Feed Check",
-    language: "Language",
-    upload: "Upload an image",
-    analyze: "Analyze",
-    analyzing: "Analyzing...",
-    result: "Analysis Result",
-    preview: "Image Preview",
-    error: "Please provide a language and an image.",
-    failed: "Failed to analyze the input. Please try again.",
-    history: "Analysis History",
-    clear: "Clear History"
-  },
-  French: {
-    title: "Détection de la Plante",
-    language: "Langue",
-    upload: "Télécharger une image",
-    analyze: "Analyser",
-    analyzing: "Analyse en cours...",
-    result: "Résultat de l'analyse",
-    preview: "Aperçu de l'image",
-    error: "Veuillez choisir une langue et une image.",
-    failed: "Échec de l'analyse. Veuillez réessayer.",
-    history: "Historique des analyses",
-    clear: "Effacer l'historique"
-  },
-  Kirundi: {
-    title: "Isuzuma Igiti",
-    language: "Ururimi",
-    upload: "Shira ishusho",
-    analyze: "Suzuma",
-    analyzing: "Biriko birasuzumwa...",
-    result: "Ibisubizo",
-    preview: "Ishusho yerekanywe",
-    error: "Hitamwo ururimi n’ishusho.",
-    failed: "Ntivyagenze neza. Gerageza kandi.",
-    history: "Amateka y'isesengura",
-    clear: "Siba amateka"
-  },
-  Swahili: {
-    title: "Ugunduzi wa Chakula wa Mnyama",
-    language: "Lugha",
-    upload: "Pakia picha",
-    analyze: "Changanua",
-    analyzing: "Inachanganuliwa...",
-    result: "Matokeo ya Uchambuzi",
-    preview: "Hakikisho la picha",
-    error: "Tafadhali chagua lugha na picha.",
-    failed: "Imeshindikana kuchanganua. Jaribu tena.",
-    history: "Historia ya Uchambuzi",
-    clear: "Futa Historia"
-  },
-};
+export default function FeedCheck() {
+  const { language } = useContext(LanguageContext);
+  const { t } = useTranslation("feed");
 
-export default function Plant() {
-  const [textInput, setTextInput] = useState("English");
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -68,19 +17,15 @@ export default function Plant() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const t = translations[textInput] || translations.English;
-
-  // Charger l'historique au démarrage
   useEffect(() => {
-    const stored = localStorage.getItem("analysisHistory");
+    const stored = localStorage.getItem("feedAnalysisHistory");
     if (stored) {
       setHistory(JSON.parse(stored));
     }
   }, []);
 
-  // Sauvegarde à chaque changement
   useEffect(() => {
-    localStorage.setItem("analysisHistory", JSON.stringify(history));
+    localStorage.setItem("feedAnalysisHistory", JSON.stringify(history));
   }, [history]);
 
   const handleImageChange = (e) => {
@@ -89,14 +34,14 @@ export default function Plant() {
     setImagePreview(file ? URL.createObjectURL(file) : null);
   };
 
-  const analyzeInput = async () => {
-    if (!textInput.trim() || !selectedImage) {
-      setError(t.error);
+  const analyzeInput = useCallback(async () => {
+    if (!language || !selectedImage) {
+      setError(t.error || "Please provide a language and an image.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("textInput", textInput);
+    formData.append("textInput", language);
     formData.append("image", selectedImage);
 
     try {
@@ -112,7 +57,7 @@ export default function Plant() {
       setAnalysisResult(resultText);
 
       const newEntry = {
-        language: textInput,
+        language,
         image: imagePreview,
         result: resultText,
         timestamp: new Date().toISOString(),
@@ -121,15 +66,15 @@ export default function Plant() {
       setHistory((prev) => [newEntry, ...prev]);
     } catch (err) {
       console.error("Error analyzing input:", err);
-      setError(t.failed);
+      setError(t.failed || "Analysis failed");
     } finally {
       setLoading(false);
     }
-  };
+  }, [language, selectedImage, imagePreview, t]);
 
   const handleClearHistory = () => {
     setHistory([]);
-    localStorage.removeItem("analysisHistory");
+    localStorage.removeItem("feedAnalysisHistory");
   };
 
   return (
@@ -137,29 +82,11 @@ export default function Plant() {
       <div className="container py-4">
         <div className="card shadow-sm border-0 mb-4">
           <div className="card-body">
-            <h2 className="text-center text-primary mb-4">🌿 {t.title}</h2>
-
-            <div className="mb-3">
-              <label htmlFor="textInput" className="form-label fw-semibold">
-                🌐 {t.language}
-              </label>
-              <select
-                id="textInput"
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                className="form-select"
-              >
-                {Object.keys(translations).map((lang) => (
-                  <option key={lang} value={lang}>
-                    {lang}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <h2 className="text-center text-primary mb-4">🌾 {t.title || "Feed Check"}</h2>
 
             <div className="mb-3">
               <label htmlFor="imageInput" className="form-label fw-semibold">
-                🖼️ {t.upload}
+                🖼️ {t.upload || "Upload Image"}
               </label>
               <input
                 type="file"
@@ -172,7 +99,7 @@ export default function Plant() {
 
             {imagePreview && (
               <div className="mb-3 text-center">
-                <h6 className="text-muted">{t.preview}:</h6>
+                <h6 className="text-muted">{t.preview || "Preview"}:</h6>
                 <img
                   src={imagePreview}
                   alt="Selected"
@@ -191,10 +118,10 @@ export default function Plant() {
                 {loading ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2" role="status" />
-                    {t.analyzing}
+                    {t.analyzing || "Analyzing..."}
                   </>
                 ) : (
-                  <>🔍 {t.analyze}</>
+                  <>🔍 {t.analyze || "Analyze"}</>
                 )}
               </button>
             </div>
@@ -207,7 +134,7 @@ export default function Plant() {
 
             {analysisResult && (
               <div className="mt-4">
-                <h4 className="text-success">✅ {t.result}</h4>
+                <h4 className="text-success">✅ {t.result || "Result"}</h4>
                 <div className="mt-2 p-3 border rounded bg-light">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {analysisResult}
@@ -222,9 +149,12 @@ export default function Plant() {
           <div className="card shadow-sm border-0">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5 className="text-secondary">🕘 {t.history}</h5>
-                <button className="btn btn-sm btn-outline-danger" onClick={handleClearHistory}>
-                  🗑 {t.clear}
+                <h5 className="text-secondary">🕘 {t.history || "History"}</h5>
+                <button
+                  className="btn btn-sm btn-outline-danger"
+                  onClick={handleClearHistory}
+                >
+                  🗑 {t.clear || "Clear"}
                 </button>
               </div>
               <ul className="list-group">
