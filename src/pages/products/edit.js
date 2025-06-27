@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import ProductForm from '@/components/ProductForm';
 import axiosInstance from '@/utils/axiosInstance';
-import UserLayout from '@/components/UserLayout';
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -12,22 +11,13 @@ export default function EditProductPage() {
 
   useEffect(() => {
     if (id) {
-      axiosInstance.get(`/product.php?id=${id}`)
+      axiosInstance.get(`/get-product.php?id=${id}`)
         .then(res => setProduct(res.data))
         .catch(err => console.error(err));
     }
   }, [id]);
 
-  return (
-    <UserLayout>
-      <div className="container mt-4">
-        <h3>Edit Product</h3>
-        {product ? (
-          <ProductForm product={product} />
-        ) : (
-          <p>Loading...</p>
-        )}
-      </div>
-    </UserLayout>
-  );
+  if (!product) return <p className="text-center mt-4">Loading...</p>;
+
+  return <ProductForm product={product} />;
 }
