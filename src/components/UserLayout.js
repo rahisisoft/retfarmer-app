@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import BASE_API_URL from '../utils/config';
 import { useTranslation } from '@/hooks/useTranslation';
+import WeatherNotifier from "@/components/WeatherNotifier";
 
 const UserLayout = ({ children }) => {
   const router = useRouter();
@@ -12,9 +13,9 @@ const UserLayout = ({ children }) => {
   const navRef = useRef(null);
   const [navHeight, setNavHeight] = useState(80);
 
-  useEffect(() => {
+  /*useEffect(() => {
   console.log("Traductions chargées dans t:", t);
-}, [t]);
+}, [t]);*/
 
   useEffect(() => {
     if (navRef.current) setNavHeight(navRef.current.offsetHeight);
@@ -78,6 +79,8 @@ const UserLayout = ({ children }) => {
   );
 
   return (
+    <>
+      
     <div className="d-flex flex-column min-vh-100 bg-light">
       {/* Header */}
       <header className="bg-white shadow-sm py-2 sticky-top">
@@ -89,7 +92,7 @@ const UserLayout = ({ children }) => {
                 <img src={`${BASE_API_URL}/${user.photo}`} alt={user.name} className="h-100 w-auto" />
               </div>
               <span className="ms-2 fw-medium text-truncate" style={{ maxWidth: '150px' }}>
-                {t.hello || 'Hello'}, {user.name}
+                {user.name}
               </span>
             </div>
           </div>
@@ -113,6 +116,7 @@ const UserLayout = ({ children }) => {
         </div>
       </nav>
     </div>
+    </>
   );
 };
 

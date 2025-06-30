@@ -155,6 +155,7 @@ const TranslationAdmin = () => {
       </div>
 
       {/* Tableau */}
+      <div className="table-responsive">
       <table className="table table-bordered">
         <thead className="table-secondary">
           <tr>
@@ -185,7 +186,7 @@ const TranslationAdmin = () => {
           ))}
         </tbody>
       </table>
-
+        </div>
       {/* Pagination */}
       <nav>
         <ul className="pagination justify-content-center">

@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { LanguageContext } from '@/contexts/LanguageContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import WeatherNotifier from "@/components/WeatherNotifier";
 
 function Login() {
   const { language, changeLanguage } = useContext(LanguageContext);
@@ -31,7 +32,7 @@ function Login() {
     const user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user"));
 
     if (token && user) {
-      router.push(user.role === "admin" ? "/dashboard" : "/userboard");
+      router.push("/userboard");
     }
   }, []);
 
@@ -56,11 +57,11 @@ function Login() {
 
       if (!token || !user) throw new Error("Invalid response from server");
 
-      const storage = form.remember ? localStorage : sessionStorage;
+      const storage =localStorage;
       storage.setItem("token", token);
       storage.setItem("user", JSON.stringify(user));
 
-      router.push(user.role === "admin" ? "/dashboard" : "/userboard");
+      router.push("/userboard");
     } catch (err) {
       setError(err.response?.data?.error || err.message || "Login failed.");
     } finally {
@@ -69,6 +70,9 @@ function Login() {
   };
 
   return (
+    <>
+    <WeatherNotifier />
+    
     <div className="container d-flex align-items-center justify-content-center min-vh-100">
       <div className="card shadow-lg p-4" style={{ maxWidth: "400px", width: "100%" }}>
         <div className="text-center mb-4">
@@ -151,6 +155,7 @@ function Login() {
         </p>
       </div>
     </div>
+    </>
   );
 }
 

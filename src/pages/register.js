@@ -6,7 +6,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 const countries = [
   { name: "Burundi", code: "BU", dial_code: "+257" },
-  { name: "Democratic Republic of Congo", code: "DRC", dial_code: "+243" },
+  { name: "DRC", code: "DRC", dial_code: "+243" },
   { name: "Rwanda", code: "RW", dial_code: "+250" },
 ];
 

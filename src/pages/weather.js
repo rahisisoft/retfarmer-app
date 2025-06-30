@@ -1,10 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useContext } from "react";
 import axiosInstance from "@/utils/axiosInstance";
 import axios from "axios";
 import UserLayout from "@/components/UserLayout";
 import { useRouter } from "next/router";
+import { LanguageContext } from "@/contexts/LanguageContext";
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function Weather() {
+  const { language } = useContext(LanguageContext);
+  const { t } = useTranslation('weather');
+
   const [location, setLocation] = useState("");
   const [forecast, setForecast] = useState(null);
   const [error, setError] = useState(null);
@@ -87,21 +92,21 @@ export default function Weather() {
     const avgHumidity = humidities.reduce((a, b) => a + b, 0) / humidities.length;
     
     if (conditions.includes("Rain")) {
-      return "🌧️ Pluie prévue - Évitez les traitements chimiques et profitez de l'irrigation naturelle";
+      return `🌧️ ${t.rain_advice}`;
     }
     if (maxTemp > 30) {
-      return "🔥 Fortes chaleurs - Augmentez l'arrosage pour éviter le stress hydrique des cultures";
+      return `🔥 ${t.heat_advice}`;
     }
     if (minTemp < 5) {
-      return "❄️ Risque de gel - Protégez les cultures sensibles avec des voiles d'hivernage";
+      return `❄️ ${t.cold_advice}`;
     }
     if (conditions.includes("Clear") && maxTemp > 25) {
-      return "☀️ Temps ensoleillé - Conditions idéales pour les récoltes et les semis";
+      return `☀️ ${t.sunny_advice}`;
     }
     if (avgHumidity > 80) {
-      return "💧 Humidité élevée - Surveillez l'apparition de maladies fongiques";
+      return `💧 ${t.humidity_advice}`;
     }
-    return "🌾 Conditions normales - Poursuivez vos activités agricoles habituelles";
+    return `🌾 ${t.normal_conditions}`;
   };
 
   const getDayIcon = (dayData) => {
@@ -148,13 +153,13 @@ export default function Weather() {
           <div className="col-md-8">
             <div className="card shadow-sm mb-4">
               <div className="card-body">
-                <h2 className="mb-4">🌤️ Prévision Météo Agricole</h2>
+                <h2 className="mb-4">🌤️ ${t.weather_title}</h2>
                 <div className="alert alert-info">
-                  <strong>📊 Comment interpréter ces données :</strong> 
+                  <strong>📊 {t.weather_info} :</strong> 
                   <ul className="mb-0 mt-2">
-                    <li>Les prévisions impactent directement vos cultures et activités agricoles</li>
-                    <li>Les icônes colorées indiquent les conditions dominantes</li>
-                    <li>Les conseils agricoles sont générés automatiquement</li>
+                    <li>{t.forecast_impact}</li>
+                    <li>{t.colored_icons}</li>
+                    <li>{t.auto_advice}</li>
                   </ul>
                 </div>
                 
@@ -182,10 +187,10 @@ export default function Weather() {
                     
                     {/* Légende des symboles */}
                     <div className="d-flex flex-wrap gap-2 mb-3">
-                      <small><span className="text-danger fw-bold">●</span> Température élevée</small>
-                      <small><span className="text-primary fw-bold">●</span> Température basse</small>
-                      <small><span className="text-warning fw-bold">●</span> Vent fort</small>
-                      <small><span className="text-success fw-bold">●</span> Conditions optimales</small>
+                      <small><span className="text-danger fw-bold">●</span> {t.legend_high_temp}</small>
+                      <small><span className="text-primary fw-bold">●</span> {t.legend_low_temp}</small>
+                      <small><span className="text-warning fw-bold">●</span> {t.legend_wind}</small>
+                      <small><span className="text-success fw-bold">●</span> {t.legend_good}</small>
                     </div>
 
                     {Object.entries(groupedForecast).map(([date, dayData], i) => {
@@ -224,18 +229,18 @@ export default function Weather() {
                           </div>
                           
                           <div className="text-success mb-2">
-                            <strong>Conseil agricole :</strong> {dayAdvice}
+                            <strong>{t.agricultural_advice} :</strong> {dayAdvice}
                           </div>
                           
                           {expandedDays[date] && (
                             <table className="table table-sm table-bordered mt-2">
                               <thead className="table-light">
                                 <tr>
-                                  <th>Heure</th>
-                                  <th>Temp (°C)</th>
-                                  <th>Conditions</th>
-                                  <th>Humidité</th>
-                                  <th>Vent</th>
+                                  <th>{t.hour}</th>
+                                  <th>{t.temperature_c}</th>
+                                  <th>{t.conditions}</th>
+                                  <th>{t.humidity}</th>
+                                  <th>{t.wind}</th>
                                 </tr>
                               </thead>
                               <tbody>
