@@ -108,7 +108,7 @@ const UserLayout = ({ children }) => {
       <nav ref={navRef} className="bg-white border-top py-2 position-fixed bottom-0 start-0 end-0 z-3 shadow">
         <div className="container">
           <div className="d-flex justify-content-around">
-            <NavItem href="/userboard" icon="fas fa-home" text='' active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
+            <NavItem href="/plant" icon="fas fa-home" text='' active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
             <NavItem href="/profile" icon="fas fa-user" text='' active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
             <NavItem href="/settings" icon="fas fa-cog" text='' active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
             <NavItem icon="fas fa-sign-out-alt" text='' active={false} onClick={handleLogout} />

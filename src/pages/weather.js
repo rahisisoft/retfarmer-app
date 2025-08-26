@@ -5,6 +5,7 @@ import UserLayout from "@/components/UserLayout";
 import { useRouter } from "next/router";
 import { LanguageContext } from "@/contexts/LanguageContext";
 import { useTranslation } from '@/hooks/useTranslation';
+import WeatherNotifier from "@/components/WeatherNotifier";
 
 export default function Weather() {
   const { language } = useContext(LanguageContext);
@@ -146,6 +147,7 @@ export default function Weather() {
   const groupedForecast = groupDataByDate();
 
   return (
+  <><WeatherNotifier />
     <UserLayout>
       <div className="container py-4">
         <div className="row">
@@ -153,7 +155,7 @@ export default function Weather() {
           <div className="col-md-8">
             <div className="card shadow-sm mb-4">
               <div className="card-body">
-                <h2 className="mb-4">🌤️ ${t.weather_title}</h2>
+                <h2 className="mb-4">🌤️ {t.weather_title}</h2>
                 <div className="alert alert-info">
                   <strong>📊 {t.weather_info} :</strong> 
                   <ul className="mb-0 mt-2">
@@ -398,5 +400,6 @@ export default function Weather() {
         </div>
       </div>
     </UserLayout>
+    </>
   );
 }

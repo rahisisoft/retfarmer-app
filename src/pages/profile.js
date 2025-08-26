@@ -8,6 +8,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 const Profile = () => {
   const { language } = useContext(LanguageContext);
   const { t } = useTranslation('profile');
+  const { t2 } = useTranslation('register');
 
   const [userData, setUserData] = useState({
     id: '',
@@ -15,6 +16,9 @@ const Profile = () => {
     phone: '',
     job: '',
     country: '',
+    region: '',
+    gender: '',
+    date_of_birth: '',
     photo: ''
   });
 
@@ -58,35 +62,35 @@ const Profile = () => {
     });
   };
 
+  const countries = ['Burundi', 'Rwanda', 'DRC'];
+  const genders = ['M', 'F', 'O'];
+
   return (
     <UserLayout>
       <div className="mb-3 text-center">
         <div className="position-relative d-inline-block">
-  <img
-    src={`${BASE_API_URL}/${userData.photo}`}
-    alt="Avatar"
-    className="rounded-circle"
-    style={{ width: "100px", height: "100px", objectFit: "cover" }}
-  />
-
-  <label
-    htmlFor="photoUpload"
-    className="position-absolute bottom-0 end-0 bg-white rounded-circle border shadow p-1"
-    style={{ cursor: "pointer", width: "30px", height: "30px", textAlign: "center", fontSize: "18px" }}
-    title="Change photo"
-  >
-    📷
-  </label>
-
-  <input
-    id="photoUpload"
-    type="file"
-    accept="image/*"
-    style={{ display: "none" }}
-    onChange={handlePhotoChange}
-  />
-</div>
-
+          <img
+            src={`${BASE_API_URL}/${userData.photo}`}
+            alt="Avatar"
+            className="rounded-circle"
+            style={{ width: "100px", height: "100px", objectFit: "cover" }}
+          />
+          <label
+            htmlFor="photoUpload"
+            className="position-absolute bottom-0 end-0 bg-white rounded-circle border shadow p-1"
+            style={{ cursor: "pointer", width: "30px", height: "30px", textAlign: "center", fontSize: "18px" }}
+            title="Change photo"
+          >
+            📷
+          </label>
+          <input
+            id="photoUpload"
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handlePhotoChange}
+          />
+        </div>
       </div>
 
       <div className="form-group mb-3">
@@ -127,14 +131,32 @@ const Profile = () => {
 
       <div className="form-group mb-3">
         <label>{t.country}</label>
-        <input
-          type="text"
+        <select
           name="country"
           value={userData.country}
           onChange={handleChange}
           className="form-control"
-          placeholder={t.country_placeholder}
-        />
+        >
+          
+          {countries.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-group mb-3">
+        <label>{t.gender}</label>
+        <select
+          name="gender"
+          value={userData.gender}
+          onChange={handleChange}
+          className="form-control"
+        >
+          
+          {genders.map((g) => (
+            <option key={g} value={g}>{g}</option>
+          ))}
+        </select>
       </div>
 
       <button className="btn btn-success" onClick={handleSave}>

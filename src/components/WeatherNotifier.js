@@ -2,13 +2,14 @@ import { useEffect, useContext } from "react";
 import { LanguageContext } from "@/contexts/LanguageContext";
 import { useTranslation } from '@/hooks/useTranslation';
 
+
 const WeatherNotifier = () => {
   const { language } = useContext(LanguageContext);
   const { t } = useTranslation('weather');
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
-    const region = user?.region || "Bujumbura";
+    const region = user?.region || "Cibitoke";
 
     // Demande permission à chaque login (donc pas de limite journalière ici)
     

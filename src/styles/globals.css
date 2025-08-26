@@ -135,3 +135,60 @@ body {
   background-color: #f8f9fa;
 }
 
+/* Chat Container */
+.card-body {
+  background: #f6f7fb; /* fond doux */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Bulles */
+.chat-bubble {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  word-wrap: break-word;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Bulles bot */
+.chat-bubble.bot {
+  background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+  color: #00363a;
+  border-bottom-left-radius: 5px;
+}
+
+/* Bulles utilisateur */
+.chat-bubble.user {
+  background: linear-gradient(135deg, #4e9af1, #1e70d1);
+  color: white;
+  border-bottom-right-radius: 5px;
+}
+
+/* Animation d’apparition */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Timestamp */
+.chat-bubble small {
+  font-size: 0.65rem;
+  margin-top: 2px;
+  display: block;
+  opacity: 0.7;
+}
+.chat-bubble img {
+  border-radius: 12px;
+  max-height: 180px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.chat-bubble audio {
+  width: 100%;
+  margin-top: 5px;
+  border-radius: 12px;
+}
+
+

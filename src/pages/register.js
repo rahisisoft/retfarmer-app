@@ -1,86 +1,36 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import Link from "next/link";
 import { LanguageContext } from "@/contexts/LanguageContext";
 import { useTranslation } from '@/hooks/useTranslation';
 
-const countries = [
-  { name: "Burundi", code: "BU", dial_code: "+257" },
-  { name: "DRC", code: "DRC", dial_code: "+243" },
-  { name: "Rwanda", code: "RW", dial_code: "+250" },
-];
-
 function Register() {
-  const { language } = useContext(LanguageContext);
   const { t } = useTranslation('register');
-
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    country: "",
-    phone: "",
-    job: "",
-  });
-
+  const [form, setForm] = useState({ name: "", phone: "", password: "" });
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [shakeFields, setShakeFields] = useState([]);
 
-  // Validation rules
-  const passwordRules = [
-    { regex: /.{6,}/, label: "At least 6 characters" },
-    { regex: /[0-9]/, label: "One number" },
-  ];
-
-  // Validate fields on change
   const validateField = (name, value) => {
     switch (name) {
       case "name":
         if (!value.trim()) return "Full name is required.";
         return "";
-      case "email":
-        // Simple email regex
-        if (!value.trim()) return "Email is required.";
-        if (
-          !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value.trim())
-        )
-          return "Invalid email address.";
+      case "phone":
+        if (!value.trim()) return "Phone number is required.";
+        if (!/^\d+$/.test(value.trim())) return "Phone must contain only numbers.";
         return "";
       case "password":
         if (!value) return "Password is required.";
-        // Check password rules
-        for (const rule of passwordRules) {
-          if (!rule.regex.test(value)) {
-            return `Password must have ${rule.label.toLowerCase()}.`;
-          }
-        }
-        return "";
-      case "confirmPassword":
-        if (!value) return "Please confirm your password.";
-        if (value !== form.password) return "Passwords do not match.";
-        return "";
-      case "country":
-        if (!value) return "Country is required.";
-        return "";
-      case "phone":
-        if (!value.trim()) return "Phone number is required.";
-        if (!/^\d+$/.test(value.trim()))
-          return "Phone must contain only numbers.";
-        return "";
-      case "job":
-        if (!value.trim()) return "Job is required.";
+        if (value.length < 6) return "Password must be at least 6 characters.";
         return "";
       default:
         return "";
     }
   };
 
-  // Validate all fields
   const validateAll = () => {
     const newErrors = {};
     Object.entries(form).forEach(([key, val]) => {
@@ -90,33 +40,15 @@ function Register() {
     return newErrors;
   };
 
-  // On input change
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-
-    // Validate on change for immediate feedback
-    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+    setForm(prev => ({ ...prev, [name]: value }));
+    setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
   };
 
-  // Shake animation helper: add field name to shakeFields, then remove after 500ms
   const triggerShake = (fields) => {
     setShakeFields(fields);
     setTimeout(() => setShakeFields([]), 500);
-  };
-
-  const selectedCountry = countries.find((c) => c.code === form.country);
-
-  // Password strength for progress bar
-  const passwordStrength = passwordRules.map((rule) =>
-    rule.regex.test(form.password)
-  );
-  const strengthPercent =
-    (passwordStrength.filter(Boolean).length / passwordRules.length) * 100;
-  const getStrengthColor = () => {
-    if (strengthPercent < 40) return "danger";
-    if (strengthPercent < 80) return "warning";
-    return "success";
   };
 
   const handleSubmit = async (e) => {
@@ -130,18 +62,9 @@ function Register() {
       return;
     }
 
-    const countryName = selectedCountry?.name || "";
-
     setLoading(true);
     try {
-      const res = await axiosInstance.post("register.php", {
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        country: countryName,
-        phone: form.phone,
-        job: form.job,
-      });
+      const res = await axiosInstance.post("register.php", form);
       setMessage(res.data.message);
     } catch (err) {
       setMessage(err.response?.data?.error || "Registration failed.");
@@ -152,88 +75,42 @@ function Register() {
 
   return (
     <div className="container-fluid d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
-
-      <div className="card shadow p-4" style={{ maxWidth: "500px", width: "100%" }}>
+      <div className="card shadow p-4" style={{ maxWidth: "400px", width: "100%" }}>
         <div className="text-center mb-4">
-          <img src="/images/logo.jpg" alt="Logo" className="img-fluid w-75" />
+          <img src="/images/logo.jpg" alt="Logo" className="img-fluid w-50" />
           <h3 className="mt-2">{t.title}</h3>
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
-          {[
-            { label: t.name, name: "name", type: "text", placeholder: "" },
-            { label: t.email, name: "email", type: "email", placeholder: "" },
-            {
-              label: t.country,
-              name: "country",
-              type: "select",
-              options: countries.map((c) => ({ value: c.code, label: c.name })),
-            },
-            {
-              label: t.phone,
-              name: "phone",
-              type: "phone",
-              placeholder: "",
-            },
-            {
-              label: t.job,
-              name: "job",
-              type: "text",
-              placeholder: "",
-            },
-          ].map(({ label, name, type, placeholder, options }) => (
-            <div
-              key={name}
-              className={`mb-3 ${shakeFields.includes(name) ? "animate-shake" : ""}`}
-            >
-              <label className="form-label">{label}</label>
-              {type === "select" ? (
-                <select
-                  name={name}
-                  className={`form-select ${errors[name] ? "is-invalid" : ""}`}
-                  onChange={handleChange}
-                  value={form[name]}
-                  required
-                >
-                  <option value="">{t.select_country}</option>
-                  {options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              ) : type === "phone" ? (
-                <div className="input-group">
-                  <span className="input-group-text">{selectedCountry?.dial_code || "+"}</span>
-                  <input
-                    name={name}
-                    className={`form-control ${errors[name] ? "is-invalid" : ""}`}
-                    placeholder={placeholder}
-                    onChange={handleChange}
-                    value={form[name]}
-                    required
-                  />
-                </div>
-              ) : (
-                <input
-                  name={name}
-                  type={type}
-                  className={`form-control ${errors[name] ? "is-invalid" : ""}`}
-                  placeholder={placeholder}
-                  onChange={handleChange}
-                  value={form[name]}
-                  required
-                />
-              )}
-              {errors[name] && (
-                <div className="invalid-feedback" style={{ display: "block" }}>
-                  {errors[name]}
-                </div>
-              )}
-            </div>
-          ))}
+          {/* Nom */}
+          <div className={`mb-3 ${shakeFields.includes("name") ? "animate-shake" : ""}`}>
+            <label className="form-label">{t.name}</label>
+            <input
+              name="name"
+              type="text"
+              className={`form-control ${errors.name ? "is-invalid" : ""}`}
+              value={form.name}
+              onChange={handleChange}
+              required
+            />
+            {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+          </div>
 
-          {/* Password Field with show/hide */}
+          {/* Téléphone */}
+          <div className={`mb-3 ${shakeFields.includes("phone") ? "animate-shake" : ""}`}>
+            <label className="form-label">{t.phone}</label>
+            <input
+              name="phone"
+              type="text"
+              className={`form-control ${errors.phone ? "is-invalid" : ""}`}
+              value={form.phone}
+              onChange={handleChange}
+              required
+            />
+            {errors.phone && <div className="invalid-feedback">{errors.phone}</div>}
+          </div>
+
+          {/* Mot de passe */}
           <div className={`mb-3 ${shakeFields.includes("password") ? "animate-shake" : ""}`}>
             <label className="form-label">{t.password}</label>
             <div className="input-group">
@@ -241,143 +118,43 @@ function Register() {
                 name="password"
                 type={showPassword ? "text" : "password"}
                 className={`form-control ${errors.password ? "is-invalid" : ""}`}
-                placeholder={t.password}
-                onChange={handleChange}
                 value={form.password}
+                onChange={handleChange}
                 required
               />
               <button
                 type="button"
                 className="btn btn-outline-secondary"
-                onClick={() => setShowPassword((prev) => !prev)}
+                onClick={() => setShowPassword(prev => !prev)}
                 tabIndex={-1}
               >
                 <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
               </button>
             </div>
-            {errors.password && (
-              <div className="invalid-feedback" style={{ display: "block" }}>
-                {errors.password}
-              </div>
-            )}
-
-            {form.password && (
-              <>
-                <div className="mt-2">
-                  <div className="progress">
-                    <div
-                      className={`progress-bar bg-${getStrengthColor()}`}
-                      role="progressbar"
-                      style={{ width: `${strengthPercent}%` }}
-                      aria-valuenow={strengthPercent}
-                      aria-valuemin="0"
-                      aria-valuemax="100"
-                    ></div>
-                  </div>
-                </div>
-                <ul className="mt-2 ps-3" style={{ fontSize: "0.9em" }}>
-                  {passwordRules.map((rule, index) => (
-                    <li
-                      key={index}
-                      style={{ color: passwordStrength[index] ? "green" : "red" }}
-                    >
-                      {passwordStrength[index] ? "✅" : "❌"} {rule.label}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
+            {errors.password && <div className="invalid-feedback">{errors.password}</div>}
           </div>
 
-          {/* Confirm Password with show/hide */}
-          <div className={`mb-3 ${shakeFields.includes("confirmPassword") ? "animate-shake" : ""}`}>
-            <label className="form-label">{t.confirm_password}</label>
-            <div className="input-group">
-              <input
-                name="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                className={`form-control ${errors.confirmPassword ? "is-invalid" : ""}`}
-                placeholder={t.confirm_password}
-                onChange={handleChange}
-                value={form.confirmPassword}
-                required
-              />
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => setShowConfirmPassword((prev) => !prev)}
-                tabIndex={-1}
-              >
-                <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-              </button>
-            </div>
-            {errors.confirmPassword && (
-              <div className="invalid-feedback" style={{ display: "block" }}>
-                {errors.confirmPassword}
-              </div>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary w-100"
-            disabled={loading}
-            style={{ position: "relative" }}
-          >
-            {loading && (
-              <span
-                className="spinner-border spinner-border-sm me-2"
-                role="status"
-                aria-hidden="true"
-              ></span>
-            )}
+          {/* Submit */}
+          <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+            {loading && <span className="spinner-border spinner-border-sm me-2"></span>}
             {loading ? t.registering : t.register}
           </button>
         </form>
 
-        {message && (
-          <div
-            className="alert alert-info mt-3 fade show"
-            role="alert"
-            style={{ animation: "fadein 0.5s" }}
-          >
-            {message}
-          </div>
-        )}
+        {message && <div className="alert alert-info mt-3">{message}</div>}
 
         <p className="mt-3 text-center">
-          {t.already_account}?{" "}
-          <Link href="/" className="text-decoration-none">
-            {t.login_here}
-          </Link>
+          {t.already_account}? <Link href="/">{t.login_here}</Link>
         </p>
 
-        {/* CSS for shake animation */}
         <style jsx>{`
           @keyframes shake {
-            0%,
-            100% {
-              transform: translateX(0);
-            }
-            20%,
-            60% {
-              transform: translateX(-10px);
-            }
-            40%,
-            80% {
-              transform: translateX(10px);
-            }
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
           }
           .animate-shake {
             animation: shake 0.5s;
-          }
-          @keyframes fadein {
-            from {
-              opacity: 0;
-            }
-            to {
-              opacity: 1;
-            }
           }
         `}</style>
       </div>
