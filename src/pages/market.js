@@ -29,7 +29,7 @@ export default function Market() {
   // Traductions
   const translations = {
     en: {
-      title: "African Agricultural Market",
+      title: "Ruzizi Market",
       searchPlaceholder: "Search products...",
       searchButton: "Search",
       filtersButton: "Filters",
