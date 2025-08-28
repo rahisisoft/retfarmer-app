@@ -31,7 +31,7 @@ const MarketplaceLayout = ({ children, openProductForm }) => {
       <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
         <div className="container">
           <Link href="/" className="navbar-brand fw-bold">
-            <img src="/images/logo.jpeg" alt="Logo" height="40" />
+            <img src="/images/logo.jpg" alt="Logo" style={{ maxHeight: '40px' }} />
           </Link>
 
           <form className="d-none d-md-flex mx-auto w-50">
