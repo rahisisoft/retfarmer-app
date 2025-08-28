@@ -4,8 +4,8 @@ import axios from "axios";
 
 // Crée une instance d'Axios
 const axiosInstance = axios.create({
-  //baseURL: "http://localhost/agricore_api", // ✅ Modifie selon ton API
-  baseURL: "https://retfarmer.org/retfarmer-api/", // ✅ Modifie selon ton API
+  baseURL: "http://localhost/agricore_api", // ✅ Modifie selon ton API
+  //baseURL: "https://retfarmer.org/retfarmer-api/", // ✅ Modifie selon ton API
   headers: {
     "Content-Type": "application/json",
   },

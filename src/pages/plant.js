@@ -236,7 +236,12 @@ export default function PlantChat() {
               <div className="d-flex align-items-center">
                 <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" 
                      style={{ width: "40px", height: "40px" }}>
-                  <span className="text-white">🌿</span>
+                  
+                  <img
+                      src="/images/chat.jpg"
+                      alt=""
+                      className="img-fluid"
+                    />
                 </div>
                 <div>
                   <h5 className="mb-0">{t.title || "Plant Doctor"}</h5>

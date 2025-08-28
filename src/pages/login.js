@@ -26,7 +26,7 @@ function Login() {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user"));
     if (token && user) {
-      router.push("/plant");
+      router.push("/userboard");
     }
   }, []);
 
@@ -54,7 +54,7 @@ function Login() {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      router.push("/plant");
+      router.push("/userboard");
     } catch (err) {
       setError(err.response?.data?.error || err.message || "Login failed.");
     } finally {
